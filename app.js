@@ -29,8 +29,8 @@ $("#gr").onclick=e=>{const q=e.target.dataset.q;if(q){$("#fs").value=q;location.
 drawSvc();
 
 /* Contador, revelado al hacer scroll */
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add("in");
- e.target.querySelectorAll("[data-n]").forEach(b=>{const m=+b.dataset.n;let i=0;const t=setInterval(()=>{i+=Math.ceil(m/40);if(i>=m){i=m;clearInterval(t)}b.textContent=i},30)});io.unobserve(e.target)}),{threshold:.15});
+const io=new IntersectionObserver(es=>es.forEach(e=>{e.target.classList.toggle("in",e.isIntersecting);if(!e.isIntersecting)return;
+ e.target.querySelectorAll("[data-n]").forEach(b=>{if(b.dataset.counted)return;b.dataset.counted="true";const m=+b.dataset.n;let i=0;const t=setInterval(()=>{i+=Math.ceil(m/40);if(i>=m){i=m;clearInterval(t)}b.textContent=i},30)})}),{threshold:.15});
 $$(".rv").forEach(x=>io.observe(x));
 
 /* Menú y tema */
