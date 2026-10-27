@@ -48,8 +48,34 @@ $("#cf2").onsubmit=e=>{e.preventDefault();
 /* Admin: login y panel */
 const open=(i,v)=>$(i).classList.toggle("on",v);
 $("#ad").onclick=()=>open("#lg",true);
-$$("[data-x]").forEach(b=>b.onclick=()=>{open("#lg",false);open("#pa",false)});
+$$("[data-x]").forEach(b=>b.onclick=()=>b.closest(".ov").classList.remove("on"));
 $$(".ov").forEach(o=>o.onclick=e=>{if(e.target==o)o.classList.remove("on")});
+const legalNotices={
+ privacy:{title:"Aviso de privacidad",paragraphs:[
+  "Esta página es una demostración que funciona en tu navegador. No cuenta con un servidor conectado para recibir ni enviar formularios.",
+  "Los mensajes de contacto, cotizaciones y cambios de servicios se guardan en el almacenamiento local de este navegador. Quien tenga acceso a este dispositivo o al panel de demostración podría verlos.",
+  "Las fuentes tipográficas se cargan desde Google Fonts y el enlace de ubicación abre Google Maps. Esos servicios externos pueden recibir datos técnicos de tu conexión cuando los visitas.",
+  "No ingreses información sensible en esta demostración. Para publicar una política legal definitiva hacen falta los datos de contacto y del responsable del tratamiento."
+ ]},
+ terms:{title:"Términos y condiciones",paragraphs:[
+  "Los servicios y precios mostrados son informativos. El cotizador presenta una estimación; el alcance, el precio final y el plazo deben confirmarse antes de iniciar cualquier trabajo.",
+  "Los formularios y el panel de administración de esta versión son demostrativos: guardan información únicamente en el navegador actual y no envían solicitudes a ZYNALIX.",
+  "El uso de enlaces externos, como Google Maps y Google Fonts, está sujeto a las condiciones de sus respectivos proveedores.",
+  "Esta página aún no sustituye los términos legales definitivos del negocio. Antes de recibir solicitudes reales, se debe conectar un canal de atención y publicar la información legal correspondiente."
+ ]}
+};
+$$("[data-legal]").forEach(b=>b.onclick=()=>{
+ const notice=legalNotices[b.dataset.legal];
+ if(!notice)return;
+ $("#legal-title").textContent=notice.title;
+ $("#legal-content").replaceChildren(...notice.paragraphs.map(text=>{
+  const p=document.createElement("p");
+  p.textContent=text;
+  return p;
+ }));
+ open("#legal",true);
+ $("#legal [data-x]").focus();
+});
 $("#lf").onsubmit=e=>{e.preventDefault();
  if($("#lu").value=="admin"&&$("#lp").value=="olivo2026"){$("#le").textContent="";open("#lg",false);open("#pa",true);$("#lp").value="";drawAd()}
  else $("#le").textContent="Usuario o contraseña incorrectos."};
@@ -104,7 +130,7 @@ const KB=[[/hola|buenas|hey/,"¡Hola! Soy Zyna, de ZYNALIX. Cuéntame qué le pa
 [/dato|archivo|disco|recuper/,"Podemos intentar rescatar tus archivos. Apaga el equipo y no lo uses más: así aumentan las posibilidades."],
 [/wifi|red|internet|router/,"Configuramos redes y WiFi para casa u oficina, con buena cobertura y seguridad."],
 [/web|pagina|sitio|tienda|app|aplicacion|software|program|bot|ia\b/,"Desarrollamos páginas web, tiendas en línea, aplicaciones a la medida y automatizaciones con IA. Cuéntame de tu idea y te orientamos."],
-[/horario|cuando|donde|ubic|bucaramanga|remoto/,"Atendemos en Bucaramanga y de forma remota. Respondemos en menos de 24 horas."],
+[/horario|cuando|donde|ubic|cartagena|remoto/,"Atendemos en Cartagena y de forma remota. Respondemos en menos de 24 horas."],
 [/contact|agendar|cita|whatsapp|correo/,"Déjanos tus datos en el formulario de contacto y te escribimos pronto."],
 [/gracias|chao|adios/,"¡Con gusto! Aquí estaremos cuando tu tecnología nos necesite."]];
 const ms=$("#ms");

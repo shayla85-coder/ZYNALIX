@@ -75,8 +75,25 @@ input:focus,select:focus,textarea:focus{border-color:var(--ol);box-shadow:0 0 0 
 .ld .sp{display:inline-block}@keyframes r{to{transform:rotate(360deg)}}
 .msg{padding:14px 16px;border-radius:12px;background:var(--sage);color:var(--ink);font-size:.92rem;display:none}
 footer{padding:34px 0;color:var(--mut);font-size:.88rem;border-top:1px solid var(--line)}
-footer .w{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
-footer button{background:none;border:none;color:var(--mut);cursor:pointer;font:inherit;text-decoration:underline}
+footer .w{display:grid;grid-template-columns:1fr 1.4fr;align-items:start;gap:36px}
+.footer-brand .logo{display:inline-flex}
+.footer-brand p{margin:14px 0;color:var(--mut)}
+.footer-icons{display:flex;gap:10px;margin-top:18px}
+.footer-icon{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--ol);transition:.2s}
+.footer-icon:hover{background:var(--sage);border-color:var(--ol);transform:translateY(-2px)}
+.footer-icon svg,.footer-login svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.footer-nav{display:grid;gap:18px}
+.footer-links,.footer-legal{display:flex;flex-wrap:wrap;gap:10px 20px}
+.footer-links a,.footer-legal button{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit;text-decoration:none}
+.footer-links a:hover,.footer-legal button:hover{color:var(--ol)}
+.footer-login{display:inline-flex;align-items:center;gap:7px}
+.footer-copy{color:var(--mut);border-top:1px solid var(--line);padding-top:14px}
+.legal-box{display:grid;gap:16px}
+.legal-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.legal-box h3{margin:0}
+.legal-box p{color:var(--mut)}
+.legal-box .btn{justify-self:start}
+@media(max-width:640px){footer .w{grid-template-columns:1fr;gap:24px}.footer-copy{margin-top:4px}}
 .ov{position:fixed;inset:0;background:#10140a99;backdrop-filter:blur(6px);z-index:80;display:none;align-items:center;justify-content:center;padding:18px}
 .ov.on{display:flex}
 .box{background:var(--surf);border:1px solid var(--line);border-radius:22px;padding:28px;width:100%;max-width:440px;max-height:88vh;overflow:auto;animation:up .35s}
