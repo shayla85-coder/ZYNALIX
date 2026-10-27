@@ -79,7 +79,8 @@ footer .w{display:flex;justify-content:space-between;align-items:center;flex-wra
 .footer-socials,.footer-legal{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px}
 .footer-socials:empty{display:none}
 .footer-social{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--ol);transition:.2s}
-.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:translateY(-2px)}
+a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:translateY(-2px)}
+.footer-social-placeholder{opacity:.72;cursor:default}
 .footer-social svg,.footer-login svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .footer-meta{display:grid;justify-items:end;gap:12px}
 .footer-legal button{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit;text-decoration:none}
