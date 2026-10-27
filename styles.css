@@ -1,29 +1,29 @@
 
-/* Centralize the palette so light/dark themes and component contrast stay consistent. */
+/* Centralizamos los colores para mantener coherentes el tema y el contraste de los componentes. */
 :root{--bg:#f3f2e8;--surf:#fbfaf3;--ink:#262d1c;--mut:#5e6850;--ol:#66752f;--ol2:#8a9a4b;--sage:#d3d9b4;--line:#d9dcc3;--acc:#b9893f;--hero:#2f3a1d;--on:#f3f2e8;
 color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-/* Respect the operating-system theme unless the visitor explicitly selects light mode. */
+/* Seguimos el tema del sistema, salvo que la persona elija explícitamente el modo claro. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b2013;--surf:#232a19;--ink:#ecebd9;--mut:#a9b196;--ol:#a3b45a;--ol2:#bccb78;--sage:#3a4526;--line:#37402a;--acc:#d6a85a;--hero:#141910;--on:#ecebd9;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#1b2013;--surf:#232a19;--ink:#ecebd9;--mut:#a9b196;--ol:#a3b45a;--ol2:#bccb78;--sage:#3a4526;--line:#37402a;--acc:#d6a85a;--hero:#141910;--on:#ecebd9;color-scheme:dark}
-/* Smooth anchor jumps and offset destinations below the sticky, safe-area-aware header. */
+/* Desplazamos suavemente los enlaces y dejamos espacio bajo el encabezado fijo y el área segura. */
 html{scroll-behavior:smooth;scroll-padding-top:calc(80px + env(safe-area-inset-top,0px))}
 *{box-sizing:border-box;margin:0}
 body{background:var(--bg);color:var(--ink);font:400 16px/1.6 "Schibsted Grotesk",system-ui,sans-serif;overflow-x:hidden}
-/* Fill the device notch area above the sticky header to prevent content showing through. */
+/* Cubrimos la zona de la muesca del móvil para que no se vea contenido detrás del encabezado. */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bg)}
 h1,h2,h3{font-family:"Instrument Serif",Georgia,serif;font-weight:400;line-height:1.05;letter-spacing:-.01em}
 h1{font-size:clamp(2.8rem,7vw,5.4rem)}h2{font-size:clamp(2.1rem,4.5vw,3.4rem)}h3{font-size:1.7rem}
 em{font-style:italic;color:var(--ol)}
-/* Keep content readable on wide screens while preserving a consistent mobile gutter. */
+/* Limitamos el ancho del contenido y conservamos márgenes uniformes en móviles. */
 .w{max-width:1120px;margin:0 auto;padding:0 22px}
 section{padding:92px 0}
 .kick{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ol);font-weight:600;margin-bottom:14px}
-/* Use pill-shaped controls consistently for both links and form actions. */
+/* Unificamos el aspecto redondeado de los enlaces y las acciones de los formularios. */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;border:1.5px solid var(--ol);background:var(--ol);color:#fff;font:600 .95rem inherit;font-family:inherit;cursor:pointer;text-decoration:none;transition:.25s}
 .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px -10px var(--ol)}
 .btn.g{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn.g:hover{border-color:var(--ol)}
-/* The translucent sticky header keeps navigation available without hiding page context. */
+/* El encabezado fijo y translúcido mantiene visible la navegación sin ocultar la página. */
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 nav{display:flex;align-items:center;justify-content:space-between;height:68px}
 .logo{color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:12px;font:600 1.12rem/1.1 "Schibsted Grotesk",sans-serif;letter-spacing:.3em}
@@ -34,7 +34,7 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}
 .links a:hover{color:var(--ol)}
 .ib{background:none;border:1px solid var(--line);color:var(--ink);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1rem}
 #burger{display:none}
-/* Contain decorative glows so their blur never creates horizontal page overflow. */
+/* Recortamos los brillos decorativos para que el desenfoque no desborde la página horizontalmente. */
 .hero{background:var(--hero);color:#f3f2e8;position:relative;overflow:hidden;padding:84px 0 96px}
 .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;animation:fl 14s ease-in-out infinite alternate}
 .hero::before{width:420px;height:420px;background:#7d8f3c;top:-120px;right:-80px}
@@ -48,7 +48,7 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}
 .term .bar b{width:10px;height:10px;border-radius:50%;background:#4a5a2d}
 .term pre{padding:18px 20px;min-height:230px;white-space:pre-wrap;font:inherit}
 .term .ok{color:#e0c07a}.term .d{color:#8d9677}
-/* Shared one-pixel grid gaps create dividers without extra markup between statistics. */
+/* La separación de un píxel crea divisores entre cifras sin agregar elementos al HTML. */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:-48px;position:relative;z-index:2}
 .stats div{background:var(--surf);padding:26px;text-align:center}
 .stats b{font:400 2.6rem "Instrument Serif",serif;color:var(--ol);display:block;line-height:1}
@@ -56,7 +56,7 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 30px}
 .tab{padding:9px 20px;border-radius:99px;border:1px solid var(--line);background:none;color:var(--mut);font:500 .92rem inherit;font-family:inherit;cursor:pointer;transition:.2s}
 .tab.on{background:var(--ol);color:#fff;border-color:var(--ol)}
-/* Auto-fill keeps service cards at a usable minimum width as the viewport changes. */
+/* La cuadrícula ajusta las tarjetas y mantiene un ancho mínimo legible al cambiar la pantalla. */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
 .card{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:26px;display:flex;flex-direction:column;transition:.3s;animation:up .5s both}
 .card:hover{transform:translateY(-6px);border-color:var(--ol2);box-shadow:0 22px 40px -26px var(--ol)}
@@ -71,7 +71,7 @@ nav{display:flex;align-items:center;justify-content:space-between;height:68px}
 .steps div::before{content:"0" counter(s);font:italic 1.6rem "Instrument Serif",serif;color:var(--acc)}
 .steps h3{font-size:1.4rem;margin:6px 0}.steps p{color:var(--mut);font-size:.92rem}
 .alt{background:var(--surf);border-block:1px solid var(--line)}
-/* Give the form slightly more width than its introduction for comfortable input sizing. */
+/* Reservamos un poco más de ancho al formulario para que sus campos sean cómodos. */
 .ct{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px}
 .ct ul{list-style:none;padding:0;margin-top:26px;color:var(--mut);display:grid;gap:12px}
 form{background:var(--surf);border:1px solid var(--line);border-radius:22px;padding:30px;display:grid;gap:16px}
@@ -82,18 +82,18 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:
 input:focus,select:focus,textarea:focus{border-color:var(--ol);box-shadow:0 0 0 4px color-mix(in srgb,var(--ol) 18%,transparent)}
 .er{color:#b04a3a;font-size:.8rem;font-weight:500;min-height:0}
 .bad{border-color:#b04a3a}
-/* Keep the submit spinner hidden until JavaScript applies the loading state. */
+/* Ocultamos el indicador hasta que JavaScript active el estado de carga. */
 .sp{width:16px;height:16px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite;display:none}
 .ld .sp{display:inline-block}@keyframes r{to{transform:rotate(360deg)}}
 .msg{padding:14px 16px;border-radius:12px;background:var(--sage);color:var(--ink);font-size:.92rem;display:none}
-/* Keep the footer focused on social, legal and admin links instead of repeating site navigation. */
+/* El pie muestra redes, enlaces legales y acceso de administrador, sin repetir el menú principal. */
 footer{padding:34px 0;color:var(--mut);font-size:.88rem;border-top:1px solid var(--line)}
 footer .w{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px}
 .footer-socials,.footer-legal{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px}
 .footer-socials:empty{display:none}
 .footer-social{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--ol);transition:.2s}
 a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:translateY(-2px)}
-/* Unlinked platforms remain visible but muted and non-interactive until their profiles exist. */
+/* Mostramos las redes sin perfil como iconos atenuados y no interactivos. */
 .footer-social-placeholder{opacity:.72;cursor:default}
 .footer-social svg,.footer-login svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .footer-meta{display:grid;justify-items:end;gap:12px}
@@ -107,7 +107,7 @@ a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:tr
 .legal-box p{color:var(--mut)}
 .legal-box .btn{justify-self:start}
 @media(max-width:640px){footer .w{justify-content:center}footer .footer-meta{justify-items:center}.footer-legal{justify-content:center}}
-/* Fixed overlays sit above the sticky header and center dialogs across viewport sizes. */
+/* Las ventanas superpuestas cubren el encabezado y centran los diálogos en cualquier pantalla. */
 .ov{position:fixed;inset:0;background:#10140a99;backdrop-filter:blur(6px);z-index:80;display:none;align-items:center;justify-content:center;padding:18px}
 .ov.on{display:flex}
 .box{background:var(--surf);border:1px solid var(--line);border-radius:22px;padding:28px;width:100%;max-width:440px;max-height:88vh;overflow:auto;animation:up .35s}
@@ -115,7 +115,7 @@ a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:tr
 .box form{padding:0;border:none;background:none;margin-top:16px}
 .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);font-size:.9rem}
 .row small{color:var(--mut);display:block}.row button{background:none;border:none;color:#b04a3a;cursor:pointer;font:inherit}
-/* The chat launcher avoids mobile safe areas and remains below modal dialogs. */
+/* El botón del chat respeta los márgenes seguros del móvil y queda debajo de los diálogos. */
 #cb{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:70}
 #cb>button{width:60px;height:60px;border-radius:50%;border:none;background:var(--ol);color:#fff;font:italic 1.6rem "Instrument Serif",serif;cursor:pointer;box-shadow:0 14px 30px -10px var(--ol);transition:.25s}
 #cb>button:hover{transform:scale(1.08)}
@@ -135,9 +135,9 @@ a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:tr
 .dots span{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:var(--ol);animation:bl 1s infinite}
 .dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
 @keyframes bl{50%{opacity:.2;transform:translateY(-3px)}}
-/* IntersectionObserver toggles .in on entry and exit, allowing the reveal to replay on scroll. */
+/* IntersectionObserver activa y desactiva .in al entrar o salir de pantalla para repetir la animación. */
 .rv{opacity:0;transform:translateY(26px);transition:.8s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}
-/* Collapse multi-column sections and switch to a menu before content becomes cramped. */
+/* Reducimos las columnas y usamos un menú antes de que el contenido quede demasiado estrecho. */
 @media(max-width:860px){
 .hero .w,.ct{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}
 #burger{display:block}.links{position:absolute;top:68px;left:0;right:0;background:var(--bg);flex-direction:column;padding:20px;gap:18px;border-bottom:1px solid var(--line);display:none}.links.on{display:flex}section{padding:68px 0}}
@@ -174,5 +174,5 @@ a.footer-social:hover{background:var(--sage);border-color:var(--ol);transform:tr
 .mp .pn{fill:var(--ol)}.mp .pc{fill:var(--surf)}
 .mp figcaption{position:absolute;left:16px;bottom:14px;background:var(--surf);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:.8rem;font-weight:600}
 @media(max-width:860px){.loc{grid-template-columns:1fr}.gt.wide{grid-column:span 1}}
-/* Preserve readable content and avoid motion for visitors who request reduced animation. */
+/* Respetamos la preferencia de movimiento reducido y mantenemos visible todo el contenido. */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
