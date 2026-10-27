@@ -25,7 +25,17 @@ function drawSvc(){
  $("#fs").innerHTML=S.map(x=>`<option>${esc(x.n)}</option>`).join("");drawQ();
 }
 $("#tb").onclick=e=>{if(e.target.dataset.c){cat=e.target.dataset.c;drawSvc()}};
-$("#gr").onclick=e=>{const q=e.target.dataset.q;if(q){$("#fs").value=q;location.hash="contacto"}};
+$("#gr").onclick=e=>{
+ const button=e.target.closest("[data-q]");
+ if(!button)return;
+ const i=S.findIndex(s=>s.n===button.dataset.q);
+ if(i<0)return;
+ const checkbox=$(`#ql input[type="checkbox"][data-i="${i}"]`);
+ if(!checkbox)return;
+ checkbox.checked=true;
+ calcQ();
+ location.hash="cotizador";
+};
 drawSvc();
 
 /* Contador, revelado al hacer scroll */
