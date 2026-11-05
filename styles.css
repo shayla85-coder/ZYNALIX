@@ -907,6 +907,46 @@ a.footer-social:hover {
   border-color: var(--ol);
 }
 
+.chat-hidden {
+  display: none !important;
+}
+
+.chat-consent {
+  flex: 1;
+  padding: 18px 16px;
+  color: var(--mut);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.chat-consent p {
+  margin: 0 0 14px;
+}
+
+.chat-consent .btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.chat-privacy-link,.chat-privacy button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ol);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chat-privacy {
+  margin: 0;
+  padding: 0 16px 10px;
+  color: var(--mut);
+  font-size: .7rem;
+  line-height: 1.5;
+}
+
 #cf {
   display: flex;
   gap: 8px;
