@@ -1,207 +1,750 @@
+﻿const { useEffect, useMemo, useState } = React;
 
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-async function api(url,options={}){
- const response=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
- let result;
- try{result=await response.json()}catch{result={}}
- if(!response.ok)throw new Error(typeof result.error=="string"?result.error:"No se pudo completar la solicitud.");
- return result;
+const BASE_SERVICES = [
+  { id: 1, name: "Mantenimiento preventivo", category: "Mantenimiento", price: "Desde $50.000", description: "Limpieza interna, pasta térmica y revisión completa para que rinda como el primer día." },
+  { id: 2, name: "Reparación y formateo", category: "Mantenimiento", price: "Desde $60.000", description: "Instalación de sistema, programas y respaldo de tu información." },
+  { id: 3, name: "Redes y WiFi", category: "Mantenimiento", price: "Desde $80.000", description: "Cobertura estable en casa u oficina, configuración y seguridad." },
+  { id: 4, name: "Recuperación de datos", category: "Mantenimiento", price: "Cotización", description: "Rescatamos archivos de discos y memorias dañadas." },
+  { id: 5, name: "Páginas web", category: "Desarrollo", price: "Desde $600.000", description: "Sitios rápidos, responsive y con tu identidad de marca." },
+  { id: 6, name: "Aplicaciones a la medida", category: "Desarrollo", price: "Cotización", description: "Sistemas de inventario, reservas o gestión hechos para tu negocio." },
+  { id: 7, name: "Tiendas en línea", category: "Desarrollo", price: "Desde $1.200.000", description: "Catálogo, carrito y panel para administrar tus productos." },
+  { id: 8, name: "Automatización con IA", category: "Desarrollo", price: "Cotización", description: "Chatbots y flujos que atienden a tus clientes por ti." }
+];
+
+const galleryItems = [
+  { title: "Diagnóstico y reparación", description: "Mantenimiento de equipos con pruebas de rendimiento y limpieza profesional.", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80" },
+  { title: "Configuración de redes", description: "WiFi y estructura de red para hogares y negocios con mejor cobertura.", image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80" },
+  { title: "Desarrollo web", description: "Diseños modernos, rápidos y pensados para convertir visitas en clientes.", image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80" },
+  { title: "Software a medida", description: "Flujos y paneles diseñados para tu operación real y tus objetivos.", image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" }
+];
+
+const legalNotices = {
+  privacy: {
+    title: "Aviso de privacidad",
+    paragraphs: [
+      "Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en una base de datos PostgreSQL para que ZYNALIX pueda atender la solicitud. El catálogo de servicios también se almacena allí.",
+      "El chat responde con opciones predefinidas sobre los servicios y no guarda la conversación.",
+      "Las fuentes tipográficas se cargan desde Google Fonts y el enlace de ubicación abre Google Maps. Esos servicios externos pueden recibir datos técnicos de tu conexión cuando los visitas.",
+      "Este aviso describe el comportamiento técnico actual y no reemplaza una política legal revisada para el negocio. Antes de publicar el sitio, agrega los datos del responsable del tratamiento y valida la política aplicable."
+    ]
+  },
+  terms: {
+    title: "Términos y condiciones",
+    paragraphs: [
+      "Los servicios y precios mostrados son informativos. El cotizador presenta una estimación; el alcance, el precio final y el plazo deben confirmarse antes de iniciar cualquier trabajo.",
+      "Las solicitudes de contacto y cotizaciones enviadas se guardan en PostgreSQL para que ZYNALIX pueda gestionarlas. El chat ofrece respuestas predefinidas y no envía tus preguntas a servicios de IA.",
+      "El uso de enlaces externos, como Google Maps y Google Fonts, está sujeto a las condiciones de sus respectivos proveedores.",
+      "Esta página aún no sustituye los términos legales definitivos del negocio. Antes de recibir solicitudes reales, se debe conectar un canal de atención y publicar la información legal correspondiente."
+    ]
+  }
+};
+
+function api(url, options = {}) {
+  const requestOptions = {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  };
+
+  return fetch(url, requestOptions).then(async response => {
+    let payload = {};
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo completar la solicitud.");
+    }
+
+    return payload;
+  });
 }
-const BASE=[
-{n:"Mantenimiento preventivo",c:"Mantenimiento",p:"Desde $50.000",d:"Limpieza interna, pasta térmica y revisión completa para que rinda como el primer día."},
-{n:"Reparación y formateo",c:"Mantenimiento",p:"Desde $60.000",d:"Instalación de sistema, programas y respaldo de tu información."},
-{n:"Redes y WiFi",c:"Mantenimiento",p:"Desde $80.000",d:"Cobertura estable en casa u oficina, configuración y seguridad."},
-{n:"Recuperación de datos",c:"Mantenimiento",p:"Cotización",d:"Rescatamos archivos de discos y memorias dañadas."},
-{n:"Páginas web",c:"Desarrollo",p:"Desde $600.000",d:"Sitios rápidos, responsive y con tu identidad de marca."},
-{n:"Aplicaciones a la medida",c:"Desarrollo",p:"Cotización",d:"Sistemas de inventario, reservas o gestión hechos para tu negocio."},
-{n:"Tiendas en línea",c:"Desarrollo",p:"Desde $1.200.000",d:"Catálogo, carrito y panel para administrar tus productos."},
-{n:"Automatización con IA",c:"Desarrollo",p:"Cotización",d:"Chatbots y flujos que atienden a tus clientes por ti."}];
-let S=BASE,cat="Todos";
 
-/* Terminal animada del hero */
-const L=["$ zynalix --diagnostico","<span class=d>Revisando disco…</span> <span class=ok>OK</span>","<span class=d>Temperatura CPU…</span> <span class=ok>OK</span>","<span class=d>Memoria RAM…</span> <span class=ok>OK</span>","<span class=d>Compilando tu idea…</span>","<span class=ok>✓ Todo listo. ¿Empezamos?</span>"];
-(async()=>{const t=$("#tm");let h="";for(const l of L){h+=l+"\n";t.innerHTML=h+"▍";await new Promise(r=>setTimeout(r,650))}})();
-
-/* Catálogo con filtros */
-function drawSvc(){
- const cats=["Todos",...new Set(S.map(x=>x.c))];
- $("#tb").innerHTML=cats.map(c=>`<button class="tab ${c==cat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
- $("#gr").innerHTML=S.filter(x=>cat=="Todos"||x.c==cat).map((x,i)=>`<article class="card" style="animation-delay:${i*60}ms"><span class="n">0${i+1}</span><span class="t">${esc(x.c)}</span><h3>${esc(x.n)}</h3><p>${esc(x.d)}</p><div class="f"><span>${esc(x.p)}</span><button data-q="${esc(x.n)}">Cotizar →</button></div></article>`).join("");
- $("#fs").innerHTML=S.map(x=>`<option>${esc(x.n)}</option>`).join("");drawQ();
+function formatMoney(value) {
+  const numericValue = Number(String(value).replace(/[^0-9]/g, ""));
+  if (!Number.isFinite(numericValue)) return value;
+  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(numericValue);
 }
-async function loadServices(){
- try{
-  const result=await api("/api/services");
-  if(!Array.isArray(result.services))throw new Error("El catálogo recibido no es válido.");
-  S=result.services;drawSvc();
- }catch(error){
-  const notice=$("#svc-error");notice.style.display="block";notice.textContent=error.message;
- }
+
+function App() {
+  const [services, setServices] = useState(BASE_SERVICES);
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = localStorage.getItem("zynalix-theme");
+    if (storedTheme) return storedTheme;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+  const [terminalLines, setTerminalLines] = useState(["$ zynalix --diagnostico"]);
+  const [quoteSelection, setQuoteSelection] = useState({});
+  const [quoteModality, setQuoteModality] = useState("remote");
+  const [quotePriority, setQuotePriority] = useState("normal");
+  const [quoteName, setQuoteName] = useState("");
+  const [quoteEmail, setQuoteEmail] = useState("");
+  const [quoteFeedback, setQuoteFeedback] = useState("");
+  const [contactForm, setContactForm] = useState({ name: "", email: "", service: "", message: "" });
+  const [contactFeedback, setContactFeedback] = useState({ type: "", message: "" });
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [adminForm, setAdminForm] = useState({ username: "", password: "" });
+  const [adminFeedback, setAdminFeedback] = useState("");
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [activeLegalNotice, setActiveLegalNotice] = useState(null);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("zynalix-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const animationLines = [
+      "$ zynalix --diagnostico",
+      "<span class=d>Revisando disco…</span> <span class=ok>OK</span>",
+      "<span class=d>Temperatura CPU…</span> <span class=ok>OK</span>",
+      "<span class=d>Memoria RAM…</span> <span class=ok>OK</span>",
+      "<span class=d>Compilando tu idea…</span>",
+      "<span class=ok>✓ Todo listo. ¿Empezamos?</span>"
+    ];
+
+    let index = 0;
+    const timer = setInterval(() => {
+      index += 1;
+      if (index < animationLines.length) {
+        setTerminalLines(prev => [...prev, animationLines[index]]);
+      } else {
+        setTerminalLines(animationLines);
+        clearInterval(timer);
+      }
+    }, 650);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    api("/api/services")
+      .then(result => {
+        if (Array.isArray(result.services)) {
+          setServices(result.services);
+        }
+      })
+      .catch(() => {
+        setServices(BASE_SERVICES);
+      });
+  }, []);
+
+  useEffect(() => {
+    const elements = document.querySelectorAll("[data-number]");
+    if (!elements.length) return undefined;
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const countNode = entry.target;
+        if (countNode.dataset.counted === "true") return;
+        countNode.dataset.counted = "true";
+        const targetValue = Number(countNode.dataset.number || 0);
+        let currentValue = 0;
+        const step = setInterval(() => {
+          currentValue += Math.max(1, Math.ceil(targetValue / 28));
+          if (currentValue >= targetValue) {
+            currentValue = targetValue;
+            clearInterval(step);
+          }
+          countNode.textContent = currentValue;
+        }, 30);
+      });
+    }, { threshold: 0.2 });
+
+    elements.forEach(element => observer.observe(element));
+    return () => observer.disconnect();
+  }, [services]);
+
+  const categories = useMemo(() => ["Todos", ...new Set(services.map(service => service.category))], [services]);
+  const visibleServices = selectedCategory === "Todos" ? services : services.filter(service => service.category === selectedCategory);
+
+  const selectedServices = services.filter(service => Number(quoteSelection[service.id] || 0) > 0);
+  const subtotal = selectedServices.reduce((total, service) => {
+    const servicePrice = Number(String(service.price).replace(/[^0-9]/g, ""));
+    const quantity = Number(quoteSelection[service.id] || 0);
+    return total + (Number.isFinite(servicePrice) ? servicePrice * quantity : 0);
+  }, 0);
+  const quoteTotal = subtotal * (quotePriority === "urgent" ? 1.2 : 1) + (quoteModality === "onsite" ? 30000 : 0);
+
+  function toggleService(serviceId) {
+    setQuoteSelection(prev => ({
+      ...prev,
+      [serviceId]: prev[serviceId] ? 0 : 1
+    }));
+  }
+
+  async function handleQuoteSubmit(event) {
+    event.preventDefault();
+    const items = Object.entries(quoteSelection)
+      .filter(([, quantity]) => Number(quantity) > 0)
+      .map(([serviceId, quantity]) => ({
+        serviceId: Number(serviceId),
+        quantity: Number(quantity)
+      }));
+
+    if (!items.length) {
+      setQuoteFeedback("Selecciona al menos un servicio para estimar tu presupuesto.");
+      return;
+    }
+
+    if (!quoteName.trim() || !quoteEmail.trim()) {
+      setQuoteFeedback("Escribe tu nombre y correo para enviar la cotización.");
+      return;
+    }
+
+    try {
+      const result = await api("/api/quotes", {
+        method: "POST",
+        body: JSON.stringify({
+          name: quoteName.trim(),
+          email: quoteEmail.trim(),
+          items,
+          modality: quoteModality,
+          priority: quotePriority
+        })
+      });
+      setQuoteFeedback(`Cotización enviada. Estimado total: ${formatMoney(result.estimatedTotal)}.`);
+    } catch (error) {
+      setQuoteFeedback(error.message);
+    }
+  }
+
+  async function handleContactSubmit(event) {
+    event.preventDefault();
+    const isValidName = contactForm.name.trim().length >= 3;
+    const isValidEmail = /^\S+@\S+\.\S+$/.test(contactForm.email);
+    const isValidMessage = contactForm.message.trim().length >= 10;
+
+    if (!isValidName || !isValidEmail || !isValidMessage) {
+      setContactFeedback({
+        type: "error",
+        message: "Revisa los datos del formulario: nombre, correo y mensaje son obligatorios."
+      });
+      return;
+    }
+
+    try {
+      await api("/api/contact", {
+        method: "POST",
+        body: JSON.stringify({
+          name: contactForm.name.trim(),
+          email: contactForm.email.trim(),
+          service: contactForm.service,
+          message: contactForm.message.trim()
+        })
+      });
+      setContactForm({ name: "", email: "", service: "", message: "" });
+      setContactFeedback({
+        type: "success",
+        message: "¡Gracias! Guardamos tu solicitud y te escribiremos pronto."
+      });
+    } catch (error) {
+      setContactFeedback({ type: "error", message: error.message });
+    }
+  }
+
+  async function handleAdminLogin(event) {
+    event.preventDefault();
+    try {
+      await api("/api/admin/login", {
+        method: "POST",
+        body: JSON.stringify({
+          username: adminForm.username,
+          password: adminForm.password
+        })
+      });
+      setAdminFeedback("Sesión iniciada correctamente.");
+      setAdminOpen(false);
+    } catch (error) {
+      setAdminFeedback(error.message);
+    }
+  }
+
+  function openLegalNotice(key) {
+    setActiveLegalNotice(legalNotices[key]);
+  }
+
+  return (
+    <>
+      <header>
+        <div className="w">
+          <nav>
+            <a className="logo" href="#inicio" aria-label="ZYNALIX, inicio">
+              <svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <rect x="1.5" y="1.5" width="37" height="37" rx="11" stroke="var(--ol)" strokeWidth="2" />
+                <path d="M12 13h16L12 27h16" stroke="var(--ol)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="30" cy="11" r="2.2" fill="var(--acc)" />
+              </svg>
+              <span>
+                ZYNALIX
+                <small>TECNOLOGÍA Y SOFTWARE</small>
+              </span>
+            </a>
+
+            <div className="links" id="lk">
+              <a href="#nosotros">Quiénes somos</a>
+              <a href="#servicios">Servicios</a>
+              <a href="#cotizador">Cotizador</a>
+              <a href="#galeria">Galería</a>
+              <a href="#ubicacion">Ubicación</a>
+              <a href="#contacto">Contacto</a>
+              <button type="button" className="btn g" onClick={() => setAdminOpen(true)} style={{ padding: "9px 20px" }}>
+                Panel
+              </button>
+              <button type="button" className="ib" id="th" title="Cambiar tema" aria-label="Cambiar tema" onClick={() => setTheme(prev => prev === "dark" ? "light" : "dark")}>
+                ◐
+              </button>
+            </div>
+
+            <button className="ib" type="button" aria-label="Abrir menú" style={{ width: "44px", height: "44px", borderColor: "var(--ol)", color: "var(--ol)" }} onClick={() => document.getElementById("lk").classList.toggle("on")}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main id="inicio">
+        <div className="hero">
+          <div className="w">
+            <div>
+              <p className="kick" style={{ color: "#c3d27a" }}>Soporte técnico · Software a la medida</p>
+              <h1>
+                Tu tecnología, <em>siempre en marcha.</em>
+              </h1>
+              <p className="lead">Cuidamos tus equipos y construimos el software que tu negocio necesita. Un solo equipo, de la reparación a la aplicación.</p>
+              <a className="btn" href="#cotizador" style={{ background: "#c3d27a", borderColor: "#c3d27a", color: "#2f3a1d" }}>
+                Cotizar ahora
+              </a>
+              <a className="btn g" href="#servicios" style={{ marginLeft: "8px" }}>
+                Ver servicios
+              </a>
+            </div>
+
+            <div className="term">
+              <div className="bar">
+                <b></b>
+                <b></b>
+                <b></b>
+              </div>
+              <pre>{terminalLines.join("\n")}{"▍"}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div className="w">
+          <div className="stats rv">
+            <div>
+              <b data-number="350">0</b>
+              <span>equipos revividos</span>
+            </div>
+            <div>
+              <b data-number="40">0</b>
+              <span>proyectos de software</span>
+            </div>
+            <div>
+              <b data-number="24">0</b>
+              <span>horas de respuesta máx.</span>
+            </div>
+            <div>
+              <b data-number="98">0</b>
+              <span>% clientes que repiten</span>
+            </div>
+          </div>
+        </div>
+
+        <section id="nosotros" className="alt">
+          <div className="w ab">
+            <div className="rv">
+              <p className="kick">Quiénes somos</p>
+              <h2>
+                Tecnología con <em>criterio</em> y cercanía
+              </h2>
+              <p>
+                ZYNALIX es un emprendimiento que une dos mundos que casi siempre van separados: el cuidado de tus equipos y la creación de software. Así no tienes que buscar un proveedor para reparar tu computador y otro para construir tu aplicación.
+              </p>
+              <p>
+                Trabajamos con personas, familias y negocios que necesitan que su tecnología funcione, y que les expliquen las cosas en palabras claras.
+              </p>
+            </div>
+
+            <div className="pil rv">
+              <div>
+                <b>Misión</b>
+                <span>Mantener la tecnología de nuestros clientes en marcha y crear software que haga crecer sus negocios.</span>
+              </div>
+              <div>
+                <b>Visión</b>
+                <span>Ser el aliado tecnológico de confianza de los emprendimientos de la región.</span>
+              </div>
+              <div>
+                <b>Valores</b>
+                <span>Transparencia en cada precio, precisión técnica y un trato cercano.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="servicios">
+          <div className="w">
+            <p className="kick rv">Catálogo</p>
+            <h2 className="rv">
+              Lo que hacemos, <em>bien hecho</em>
+            </h2>
+
+            <div className="tabs">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`tab ${selectedCategory === category ? "on" : ""}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid">
+              {visibleServices.map((service, index) => (
+                <article className="card" key={service.id || service.name} style={{ animationDelay: `${index * 60}ms` }}>
+                  <span className="n">0{index + 1}</span>
+                  <span className="t">{service.category}</span>
+                  <h3>{service.name}</h3>
+                  <p>{service.description}</p>
+                  <div className="f">
+                    <span>{service.price}</span>
+                    <button type="button" onClick={() => toggleService(service.id)}>
+                      {quoteSelection[service.id] ? "Seleccionado" : "Cotizar →"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="cotizador" className="alt">
+          <div className="w">
+            <p className="kick rv">Cotizador</p>
+            <h2 className="rv">
+              Calcula tu <em>presupuesto</em>
+            </h2>
+            <p className="rv" style={{ color: "var(--mut)", maxWidth: "560px", marginTop: "10px" }}>
+              Elige lo que necesitas y obtén un valor estimado al instante. Un técnico lo confirma en menos de 24 horas.
+            </p>
+
+            <div className="qg rv">
+              <div id="ql">
+                {services.map(service => (
+                  <label key={service.id} className="quote-row">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(quoteSelection[service.id])}
+                      onChange={() => toggleService(service.id)}
+                    />
+                    <span>{service.name}</span>
+                    <strong>{service.price}</strong>
+                  </label>
+                ))}
+              </div>
+
+              <aside className="qs">
+                <h3>Tu estimado</h3>
+                <div id="qd">
+                  {selectedServices.length ? (
+                    selectedServices.map(service => (
+                      <div key={service.id} className="quote-selected-item">
+                        <span>{service.name}</span>
+                        <strong>x{quoteSelection[service.id] || 0}</strong>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{ color: "var(--mut)" }}>Aún no has seleccionado servicios.</p>
+                  )}
+                </div>
+                <div className="qt">{formatMoney(quoteTotal)}</div>
+
+                <form onSubmit={handleQuoteSubmit}>
+                  <label>
+                    Modalidad
+                    <select value={quoteModality} onChange={event => setQuoteModality(event.target.value)}>
+                      <option value="remote">Remoto (sin costo)</option>
+                      <option value="onsite">En sitio (+$30.000)</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    Prioridad
+                    <select value={quotePriority} onChange={event => setQuotePriority(event.target.value)}>
+                      <option value="normal">Normal</option>
+                      <option value="urgent">Urgente (+20%)</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    Nombre
+                    <input value={quoteName} onChange={event => setQuoteName(event.target.value)} autoComplete="name" />
+                  </label>
+
+                  <label>
+                    Correo
+                    <input type="email" value={quoteEmail} onChange={event => setQuoteEmail(event.target.value)} autoComplete="email" />
+                  </label>
+
+                  <span className="er" id="qr2">{quoteFeedback}</span>
+                  <button className="btn" type="submit">
+                    Solicitar cotización
+                  </button>
+                </form>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <section id="proceso">
+          <div className="w">
+            <p className="kick rv">Cómo trabajamos</p>
+            <h2 className="rv">
+              Un proceso claro, <em>sin sorpresas</em>
+            </h2>
+
+            <div className="steps rv">
+              <div>
+                <h3>Escuchamos</h3>
+                <p>Entendemos el problema o la idea antes de tocar nada.</p>
+              </div>
+              <div>
+                <h3>Diagnosticamos</h3>
+                <p>Revisión técnica y cotización transparente.</p>
+              </div>
+              <div>
+                <h3>Ejecutamos</h3>
+                <p>Reparamos o desarrollamos con avances que puedes ver.</p>
+              </div>
+              <div>
+                <h3>Acompañamos</h3>
+                <p>Entrega, capacitación y soporte posterior.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="galeria" className="alt">
+          <div className="w">
+            <p className="kick rv">Galería</p>
+            <h2 className="rv">
+              Nuestro trabajo, <em>de cerca</em>
+            </h2>
+            <p className="rv" style={{ color: "var(--mut)", maxWidth: "560px", marginTop: "10px" }}>
+              Una muestra de lo que hacemos en taller, en sitio y en pantalla. Toca cualquier imagen para verla en grande.
+            </p>
+
+            <div className="gal rv">
+              {galleryItems.map((item, index) => (
+                <button
+                  key={item.title}
+                  type="button"
+                  className="gal-item"
+                  style={{ backgroundImage: `url(${item.image})` }}
+                  aria-label={item.title}
+                  onClick={() => {
+                    setLightboxIndex(index);
+                    setLightboxOpen(true);
+                  }}
+                >
+                  <span>{item.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {lightboxOpen && (
+          <div className="ov on" id="lb" onClick={event => event.target === event.currentTarget && setLightboxOpen(false)}>
+            <div className="box" style={{ maxWidth: "640px" }}>
+              <div className="lbx" style={{ backgroundImage: `url(${galleryItems[lightboxIndex].image})` }}></div>
+              <h3>{galleryItems[lightboxIndex].title}</h3>
+              <p style={{ color: "var(--mut)" }}>{galleryItems[lightboxIndex].description}</p>
+              <div className="lbn">
+                <button type="button" className="btn g" onClick={() => setLightboxIndex(prev => (prev === 0 ? galleryItems.length - 1 : prev - 1))}>
+                  ← Anterior
+                </button>
+                <button type="button" className="btn g" onClick={() => setLightboxOpen(false)}>
+                  Cerrar
+                </button>
+                <button type="button" className="btn g" onClick={() => setLightboxIndex(prev => (prev + 1) % galleryItems.length)}>
+                  Siguiente →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <section id="ubicacion">
+          <div className="w loc">
+            <div className="rv">
+              <p className="kick">Ubicación</p>
+              <h2>
+                Encuéntranos <em>fácil</em>
+              </h2>
+              <dl>
+                <div>
+                  <dt>Ciudad</dt>
+                  <dd>Cartagena, Bolívar, Colombia</dd>
+                </div>
+                <div>
+                  <dt>Horario</dt>
+                  <dd>
+                    Lunes a viernes, 8:00 a. m. a 6:00 p. m.
+                    <br />
+                    Sábados, 9:00 a. m. a 1:00 p. m.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cobertura</dt>
+                  <dd>Servicio en sitio en el área metropolitana y soporte remoto en todo el país.</dd>
+                </div>
+              </dl>
+              <a className="btn" style={{ marginTop: "26px" }} target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Cartagena%2C%20Bol%C3%ADvar">
+                Cómo llegar →
+              </a>
+            </div>
+
+            <figure className="mp rv">
+              <svg viewBox="0 0 600 400" role="img" aria-label="Mapa de ubicación en Cartagena">
+                <rect className="bg" width="600" height="400" />
+                <path className="rr" d="M-10 310C120 270 200 350 330 310S520 260 620 300" />
+                <ellipse className="pk" cx="120" cy="110" rx="80" ry="50" />
+                <ellipse className="pk" cx="500" cy="90" rx="50" ry="36" />
+                <g className="rd">
+                  <path strokeWidth="16" d="M0 190H600" />
+                  <path strokeWidth="16" d="M330 0V400" />
+                  <path strokeWidth="10" d="M0 90H600M0 270H600M180 0V400M470 0V400" />
+                  <path strokeWidth="7" d="M0 140H330M330 235H600M250 0V190M400 190V400M90 190V400M540 0V190" />
+                  <path strokeWidth="12" d="M0 380L600 20" />
+                </g>
+                <circle className="pl" cx="330" cy="212" r="10" />
+                <path className="pn" d="M330 215c-14-16-22-27-22-39a22 22 0 0144 0c0 12-8 23-22 39z" />
+                <circle className="pc" cx="330" cy="176" r="8" />
+              </svg>
+              <figcaption>ZYNALIX · Cartagena</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="contacto" className="alt">
+          <div className="w ct">
+            <div className="rv">
+              <p className="kick">Contacto</p>
+              <h2>
+                Hablemos de tu <em>proyecto</em>
+              </h2>
+              <ul>
+                <li>Atención en Cartagena y de forma remota</li>
+                <li>Respuesta en menos de 24 horas</li>
+                <li>Diagnóstico inicial sin costo</li>
+              </ul>
+            </div>
+
+            <form className="rv" onSubmit={handleContactSubmit} noValidate>
+              <label>
+                Nombre
+                <input value={contactForm.name} onChange={event => setContactForm({ ...contactForm, name: event.target.value })} autoComplete="name" />
+                <span className="er"></span>
+              </label>
+
+              <label>
+                Correo
+                <input type="email" value={contactForm.email} onChange={event => setContactForm({ ...contactForm, email: event.target.value })} autoComplete="email" />
+                <span className="er"></span>
+              </label>
+
+              <label>
+                Servicio
+                <select value={contactForm.service} onChange={event => setContactForm({ ...contactForm, service: event.target.value })}>
+                  <option value="">Selecciona un servicio</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.name}>{service.name}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Mensaje
+                <textarea value={contactForm.message} onChange={event => setContactForm({ ...contactForm, message: event.target.value })} rows="5"></textarea>
+                <span className="er"></span>
+              </label>
+
+              <button className="btn" type="submit">
+                Enviar mensaje
+              </button>
+
+              {contactFeedback.message && (
+                <div className={`msg ${contactFeedback.type === "error" ? "error" : ""}`}>
+                  {contactFeedback.message}
+                </div>
+              )}
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="w" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <div>
+            <strong>ZYNALIX</strong>
+            <span> © 2025 · Cartagena, Colombia</span>
+          </div>
+          <div className="footer-links">
+            <button type="button" className="link-button" onClick={() => openLegalNotice("privacy")}>Privacidad</button>
+            <button type="button" className="link-button" onClick={() => openLegalNotice("terms")}>Términos</button>
+          </div>
+        </div>
+      </footer>
+
+      {adminOpen && (
+        <div className="ov on" onClick={event => event.target === event.currentTarget && setAdminOpen(false)}>
+          <div className="box" style={{ maxWidth: "460px" }}>
+            <button type="button" className="close-button" onClick={() => setAdminOpen(false)} aria-label="Cerrar panel administrativo">×</button>
+            <h3>Panel administrativo</h3>
+            <form onSubmit={handleAdminLogin}>
+              <label>
+                Usuario
+                <input value={adminForm.username} onChange={event => setAdminForm({ ...adminForm, username: event.target.value })} />
+              </label>
+              <label>
+                Contraseña
+                <input type="password" value={adminForm.password} onChange={event => setAdminForm({ ...adminForm, password: event.target.value })} />
+              </label>
+              <button className="btn" type="submit">Ingresar</button>
+              {adminFeedback && <div className="msg error">{adminFeedback}</div>}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {activeLegalNotice && (
+        <div className="ov on" onClick={event => event.target === event.currentTarget && setActiveLegalNotice(null)}>
+          <div className="box" style={{ maxWidth: "620px" }}>
+            <button type="button" className="close-button" onClick={() => setActiveLegalNotice(null)} aria-label="Cerrar aviso legal">×</button>
+            <h3>{activeLegalNotice.title}</h3>
+            {activeLegalNotice.paragraphs.map((paragraph, index) => (
+              <p key={index} style={{ color: "var(--mut)", marginTop: "12px" }}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
-$("#tb").onclick=e=>{if(e.target.dataset.c){cat=e.target.dataset.c;drawSvc()}};
-$("#gr").onclick=e=>{
- const button=e.target.closest("[data-q]");
- if(!button)return;
- const i=S.findIndex(s=>s.n===button.dataset.q);
- if(i<0)return;
- const checkbox=$(`#ql input[type="checkbox"][data-i="${i}"]`);
- if(!checkbox)return;
- checkbox.checked=true;
- calcQ();
- location.hash="cotizador";
-};
-drawSvc();
-loadServices();
 
-/* Contador, revelado al hacer scroll */
-const io=new IntersectionObserver(es=>es.forEach(e=>{e.target.classList.toggle("in",e.isIntersecting);if(!e.isIntersecting)return;
- e.target.querySelectorAll("[data-n]").forEach(b=>{if(b.dataset.counted)return;b.dataset.counted="true";const m=+b.dataset.n;let i=0;const t=setInterval(()=>{i+=Math.ceil(m/40);if(i>=m){i=m;clearInterval(t)}b.textContent=i},30)})}),{threshold:.15});
-$$(".rv").forEach(x=>io.observe(x));
-
-/* Menú y tema */
-$("#burger").onclick=()=>$("#lk").classList.toggle("on");$("#lk").onclick=()=>$("#lk").classList.remove("on");
-$("#th").onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=d?"light":"dark"};
-
-/* Formulario con validación y estado de carga */
-$("#cf2").onsubmit=async e=>{e.preventDefault();
- const f=[["#fn",v=>v.trim().length>=3,"Escribe tu nombre completo."],["#fe",v=>/^\S+@\S+\.\S+$/.test(v),"Ingresa un correo válido."],["#fm",v=>v.trim().length>=10,"Cuéntanos un poco más (mínimo 10 letras)."]];let ok=true;
- f.forEach(([s,fn,m])=>{const i=$(s),er=i.nextElementSibling,g=fn(i.value);i.classList.toggle("bad",!g);er.textContent=g?"":m;if(!g)ok=false});
- if(!ok)return;const b=e.target.querySelector(".btn"),o=$("#ok");b.classList.add("ld");b.disabled=true;$("#bt").textContent="Enviando…";o.style.display="none";
- try{
-  await api("/api/contact",{method:"POST",body:JSON.stringify({name:$("#fn").value.trim(),email:$("#fe").value.trim(),service:$("#fs").value,message:$("#fm").value.trim()})});
-  e.target.reset();o.textContent="¡Gracias! Guardamos tu solicitud y te escribiremos pronto.";o.classList.remove("error");
-  f.forEach(([s])=>$(s).classList.remove("bad"));
- }catch(error){o.textContent=error.message;o.classList.add("error")}
- finally{b.classList.remove("ld");b.disabled=false;$("#bt").textContent="Enviar mensaje";o.style.display="block"}
-};
-
-/* Admin: login y panel */
-const open=(i,v)=>$(i).classList.toggle("on",v);
-$("#ad").onclick=()=>open("#lg",true);
-$$("[data-x]").forEach(b=>b.onclick=()=>b.closest(".ov").classList.remove("on"));
-$$(".ov").forEach(o=>o.onclick=e=>{if(e.target==o)o.classList.remove("on")});
-const legalNotices={
- privacy:{title:"Aviso de privacidad",paragraphs:[
-  "Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en una base de datos PostgreSQL del servidor para que ZYNALIX pueda atender la solicitud. El catálogo de servicios también se almacena allí. El personal administrador autorizado puede consultar esos registros. No compartas contraseñas, datos bancarios ni información sensible.",
-  "El chat responde con opciones predefinidas sobre los servicios y no guarda la conversación.",
-  "Las fuentes tipográficas se cargan desde Google Fonts y el enlace de ubicación abre Google Maps. Esos servicios externos pueden recibir datos técnicos de tu conexión cuando los visitas.",
-  "Este aviso describe el comportamiento técnico actual y no reemplaza una política legal revisada para el negocio. Antes de publicar el sitio, agrega los datos de contacto del responsable del tratamiento y valida la política aplicable."
- ]},
- terms:{title:"Términos y condiciones",paragraphs:[
-  "Los servicios y precios mostrados son informativos. El cotizador presenta una estimación; el alcance, el precio final y el plazo deben confirmarse antes de iniciar cualquier trabajo.",
-  "Las solicitudes de contacto y cotizaciones enviadas se guardan en PostgreSQL para que ZYNALIX pueda gestionarlas. El chat ofrece respuestas predefinidas y no envía tus preguntas a servicios de IA.",
-  "El uso de enlaces externos, como Google Maps y Google Fonts, está sujeto a las condiciones de sus respectivos proveedores.",
-  "Esta página aún no sustituye los términos legales definitivos del negocio. Antes de recibir solicitudes reales, se debe conectar un canal de atención y publicar la información legal correspondiente."
- ]}
-};
-$$("[data-legal]").forEach(b=>b.onclick=()=>{
- const notice=legalNotices[b.dataset.legal];
- if(!notice)return;
- $("#legal-title").textContent=notice.title;
- $("#legal-content").replaceChildren(...notice.paragraphs.map(text=>{
-  const p=document.createElement("p");
-  p.textContent=text;
-  return p;
- }));
- open("#legal",true);
- $("#legal [data-x]").focus();
-});
-$("#lf").onsubmit=async e=>{e.preventDefault();const button=e.target.querySelector('button[type="submit"]');button.disabled=true;$("#le").textContent="";
- try{
-  await api("/api/admin/login",{method:"POST",body:JSON.stringify({username:$("#lu").value,password:$("#lp").value})});
-  open("#lg",false);open("#pa",true);$("#lp").value="";await drawAd();
- }catch(error){$("#le").textContent=error.message}
- finally{button.disabled=false}
-};
-$$("[data-p]").forEach(b=>b.onclick=()=>{$$("[data-p]").forEach(x=>x.classList.toggle("on",x==b));$("#pm").style.display=b.dataset.p=="m"?"":"none";$("#pq").style.display=b.dataset.p=="q"?"":"none";$("#ps").style.display=b.dataset.p=="s"?"":"none"});
-async function drawAd(){
- $("#pm").innerHTML="<p>Cargando solicitudes…</p>";$("#pq").innerHTML="<p>Cargando cotizaciones…</p>";$("#pl").innerHTML="";
- try{
-  const [messageData,quoteData,serviceData]=await Promise.all([
-   api("/api/admin/messages"),api("/api/admin/quotes"),api("/api/services")
-  ]);
-  $("#pm").innerHTML=messageData.messages.length?messageData.messages.map(m=>`<div class="row"><div><b>${esc(m.name)}</b> · ${esc(m.email)}<small>${esc(m.service)} — ${new Date(m.created_at).toLocaleString("es-CO")}</small>${esc(m.message)}</div><button data-dm="${esc(m.id)}">Borrar</button></div>`).join(""):"<p>Aún no hay mensajes.</p>";
-  $("#pq").innerHTML=quoteData.quotes.length?quoteData.quotes.map(q=>`<div class="row"><div><b>${esc(q.name)}</b> · ${esc(q.email)}<small>${new Date(q.created_at).toLocaleString("es-CO")} · ${q.modality==="onsite"?"En sitio":"Remoto"} · ${q.priority==="urgent"?"Urgente":"Normal"}</small>${q.items.map(i=>`${esc(i.name)} ×${esc(i.quantity)}`).join(", ")} — ${cop(Number(q.estimated_total))}${q.pending_items?` + ${esc(q.pending_items)} por cotizar`:""}</div></div>`).join(""):"<p>Aún no hay cotizaciones.</p>";
-  S=serviceData.services;drawSvc();
-  $("#pl").innerHTML=S.map(s=>`<div class="row"><div><b>${esc(s.n)}</b><small>${esc(s.c)} · ${esc(s.p)}</small>${esc(s.d)}</div><button data-ds="${esc(s.id)}">Eliminar</button></div>`).join("");
- }catch(error){
-  $("#pm").innerHTML=`<p class="error">${esc(error.message)}</p>`;$("#pq").innerHTML="";$("#pl").innerHTML="";
- }
-}
-$("#pa").onclick=async e=>{const a=e.target.dataset;
- try{
-  if(a.dm)await api(`/api/admin/messages/${encodeURIComponent(a.dm)}`,{method:"DELETE"});
-  if(a.ds){await api(`/api/admin/services/${encodeURIComponent(a.ds)}`,{method:"DELETE"});await loadServices()}
-  if(a.logout!==undefined){await api("/api/admin/logout",{method:"POST"});open("#pa",false);return}
-  if(a.dm||a.ds)await drawAd();
- }catch(error){$("#pm").insertAdjacentHTML("afterbegin",`<p class="error">${esc(error.message)}</p>`)}
-};
-$("#sf").onsubmit=async e=>{e.preventDefault();if(!$("#sn").value.trim())return;const button=e.target.querySelector('button[type="submit"]');button.disabled=true;
- try{
-  await api("/api/admin/services",{method:"POST",body:JSON.stringify({name:$("#sn").value.trim(),category:$("#sc").value,price:$("#sp").value.trim()||"Cotización",description:$("#sd").value.trim()||"Servicio de ZYNALIX."})});
-  e.target.reset();await drawAd();
- }catch(error){$("#pl").insertAdjacentHTML("afterbegin",`<p class="error">${esc(error.message)}</p>`)}
- finally{button.disabled=false}
-};
-
-/* Cotizador: suma servicios x cantidad, aplica modalidad y prioridad */
-function num(s){const m=String(s).replace(/\./g,"").match(/\d+/);return m?+m[0]:0}
-function cop(n){return "$"+Math.round(n).toLocaleString("es-CO")}
-function drawQ(){$("#ql").innerHTML=S.map((s,i)=>`<label class="qi"><input type="checkbox" data-i="${i}" data-svc-id="${esc(s.id||"")}"><span><b>${esc(s.n)}</b><small>${esc(s.p)}</small></span><input class="qq" type="number" min="1" max="20" value="1" data-i="${i}" aria-label="Cantidad"></label>`).join("");calcQ()}
-function calcQ(){let b=0,pend=0,det=[],items=[];
- $$("#ql input[type=checkbox]:checked").forEach(c=>{const i=c.dataset.i,q=Math.min(20,Math.max(1,+$(`.qq[data-i="${i}"]`).value||1)),v=num(S[i].p);b+=v*q;if(!v)pend++;det.push(S[i].n+" ×"+q+(v?" · "+cop(v*q):" · por cotizar"));items.push({serviceId:Number(c.dataset.svcId),quantity:q})});
- const t=det.length?b*(($("#qu").value==="urgent")?1.2:1)+($("#qm").value==="onsite"?30000:0):0;
- $("#qd").innerHTML=det.length?det.map(x=>esc(x)).join("<br>"):"Selecciona uno o más servicios.";
- $("#qt").innerHTML=cop(t)+(pend?`<small style="font:500 .8rem Schibsted Grotesk;color:var(--mut)"> + ${pend} por cotizar</small>`:"");
- return{t,det,pend,items}}
-$("#ql").oninput=e=>{if(e.target.classList.contains("qq"))e.target.closest(".qi").querySelector("[type=checkbox]").checked=true;calcQ()};
-$("#qm").onchange=$("#qu").onchange=calcQ;
-$("#qb").onclick=async()=>{const r=calcQ(),n=$("#qn").value.trim(),e=$("#qe").value.trim(),er=$("#qr2");
- if(!r.det.length){er.textContent="Elige al menos un servicio.";return}
- if(n.length<3){er.textContent="Escribe tu nombre.";return}
- if(!/^\S+@\S+\.\S+$/.test(e)){er.textContent="Ingresa un correo válido.";return}
- if(r.items.some(item=>!item.serviceId)){er.textContent="El catálogo aún no está disponible. Inténtalo de nuevo en unos segundos.";return}
- er.textContent="";const b=$("#qb");b.classList.add("ld");b.disabled=true;$("#qbt").textContent="Enviando…";
- try{
-  const result=await api("/api/quotes",{method:"POST",body:JSON.stringify({name:n,email:e,items:r.items,modality:$("#qm").value,priority:$("#qu").value})});
-  const o=$("#qk");o.classList.remove("error");o.style.display="block";o.textContent=`¡Listo! Guardamos tu solicitud de cotización. Estimado: ${cop(Number(result.estimatedTotal))}${result.pendingItems?` + ${result.pendingItems} por cotizar`:""}. Te contactaremos en menos de 24 horas.`;
- }catch(error){const o=$("#qk");o.classList.add("error");o.style.display="block";o.textContent=error.message}
- finally{b.classList.remove("ld");b.disabled=false;$("#qbt").textContent="Solicitar cotización"}
-};
-
-/* Galería con visor ampliado (flechas del teclado y Escape) */
-const IC={chip:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/>',tools:'<path d="M14.5 6.5a4 4 0 00-5 5L4 17l3 3 5.5-5.5a4 4 0 005-5l-2.5 2.5-2-2z"/>',code:'<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 6l-3 12"/>',app:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',wifi:'<path d="M3 9a13 13 0 0118 0M6 12.5a8.5 8.5 0 0112 0M9 16a4 4 0 016 0"/><circle cx="12" cy="19" r=".8"/>',laptop:'<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>'};
-const G=[{t:"Limpieza interna",k:"Mantenimiento",d:"Retiramos el polvo y revisamos cada componente para que el equipo respire de nuevo.",i:"chip",s:"tall"},
-{t:"Soporte en sitio",k:"Mantenimiento",d:"Vamos hasta tu casa u oficina y resolvemos en el lugar.",i:"tools"},
-{t:"Páginas web",k:"Desarrollo",d:"Sitios rápidos y responsive con la identidad de tu marca.",i:"code",s:"wide"},
-{t:"Apps a la medida",k:"Desarrollo",d:"Sistemas de inventario, reservas y gestión hechos para tu negocio.",i:"app",s:"tall"},
-{t:"Redes y WiFi",k:"Mantenimiento",d:"Cobertura estable y segura en cada rincón.",i:"wifi"},
-{t:"Equipos como nuevos",k:"Mantenimiento",d:"Formateo, repotenciación y optimización de portátiles y de escritorio.",i:"laptop"}];
-let gi=0;const ico=i=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">${IC[i]}</svg>`;
-$("#gg").innerHTML=G.map((g,i)=>`<button class="gt g${i%4} ${g.s||""}" data-g="${i}">${ico(g.i)}<span><b>${g.t}</b>${g.k}</span></button>`).join("");
-function showG(i){gi=(i+G.length)%G.length;const g=G[gi];$("#lbx").className="lbx g"+(gi%4);$("#lbx").innerHTML=ico(g.i);$("#lbt").textContent=g.t;$("#lbd").textContent=g.d;open("#lb",true)}
-$("#gg").onclick=e=>{const b=e.target.closest("[data-g]");if(b)showG(+b.dataset.g)};
-$("#lbp").onclick=()=>showG(gi-1);$("#lbs").onclick=()=>showG(gi+1);$("#lbc").onclick=()=>open("#lb",false);
-addEventListener("keydown",e=>{if(e.key=="Escape")$$(".ov").forEach(o=>o.classList.remove("on"));if($("#lb").classList.contains("on")){if(e.key=="ArrowRight")showG(gi+1);if(e.key=="ArrowLeft")showG(gi-1)}});
-
-const ms=$("#ms");
-function say(t,w){const d=document.createElement("div");d.className="b "+w;d.textContent=t;ms.append(d);ms.scrollTop=ms.scrollHeight;return d}
-const KB=[[/hola|buenas|hey/,"¡Hola! Soy Zyna, de ZYNALIX. Cuéntame qué le pasa a tu equipo o qué te gustaría construir."],
- [/precio|cuesta|valor|cotiz|cuanto/,()=>"Estos son algunos de nuestros valores de referencia:\n"+S.slice(0,5).map(s=>"• "+s.n+": "+s.p).join("\n")+"\nEl diagnóstico inicial es gratis."],
- [/lent|demor|tard|calient|ruido|ventilador/,"Eso suele resolverse con mantenimiento preventivo: limpieza interna y cambio de pasta térmica. Muchas veces el equipo vuelve a rendir como nuevo."],
- [/format|virus|windows|sistema|programa/,"Hacemos formateo e instalación de sistema y programas, con respaldo de tu información antes de empezar."],
- [/dato|archivo|disco|recuper/,"Podemos intentar rescatar tus archivos. Apaga el equipo y no lo uses más: así aumentan las posibilidades."],
- [/wifi|red|internet|router/,"Configuramos redes y WiFi para casa u oficina, con buena cobertura y seguridad."],
- [/web|pagina|sitio|tienda|app|aplicacion|software|program|bot|ia\b/,"Desarrollamos páginas web, tiendas en línea, aplicaciones a la medida y automatizaciones con IA. Cuéntame de tu idea y te orientamos."],
- [/horario|cuando|donde|ubic|cartagena|remoto/,"Atendemos en Cartagena y de forma remota. Respondemos en menos de 24 horas."],
- [/contact|agendar|cita|whatsapp|correo/,"Déjanos tus datos en el formulario de contacto y te escribimos pronto."],
- [/gracias|chao|adios/,"¡Con gusto! Aquí estaremos cuando tu tecnología nos necesite."]];
-function ask(q){
- say(q,"me");const t=say("","bot");t.innerHTML="<span class=dots><span></span><span></span><span></span></span>";
- const n=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");const k=KB.find(x=>x[0].test(n));
- setTimeout(()=>{const r=k?(typeof k[1]=="function"?k[1]() :k[1]):"Buena pregunta. Para darte una respuesta exacta, déjanos tus datos en el formulario de contacto y un técnico te escribe.";t.textContent=r;ms.scrollTop=ms.scrollHeight},800);
-}
-$("#cbt").onclick=()=>{$("#pn").classList.toggle("on");if(!ms.children.length){say("¡Hola! Soy Zyna. Puedo contarte sobre servicios, precios y tiempos.","bot");$("#qr").innerHTML=["¿Cuánto cuesta?","Mi PC está lento","Quiero una página web"].map(x=>`<button>${x}</button>`).join("")}};
-$("#qr").onclick=e=>{if(e.target.tagName=="BUTTON")ask(e.target.textContent)};
-$("#cf").onsubmit=e=>{e.preventDefault();const v=$("#ci").value.trim();if(v){$("#ci").value="";ask(v)}};
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
