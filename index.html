@@ -1,20 +1,147 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>ZYNALIX | Tecnología y software</title>
-    <meta name="description" content="ZYNALIX ofrece soporte técnico, reparación de computadores, redes WiFi y desarrollo de software a la medida en Cartagena." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="root"></div>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header><div class="w"><nav>
+<a class="logo" href="#inicio" aria-label="ZYNALIX, inicio"><svg width="36" height="36" viewBox="0 0 40 40" fill="none"><rect x="1.5" y="1.5" width="37" height="37" rx="11" stroke="var(--ol)" stroke-width="2"/><path d="M12 13h16L12 27h16" stroke="var(--ol)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30" cy="11" r="2.2" fill="var(--acc)"/></svg><span>ZYNALIX<small>TECNOLOGÍA Y SOFTWARE</small></span></a>
+<div class="links" id="lk"><a href="#nosotros">Quiénes somos</a><a href="#servicios">Servicios</a><a href="#cotizador">Cotizador</a><a href="#galeria">Galería</a><a href="#ubicacion">Ubicación</a><a href="#contacto">Contacto</a><a class="btn" href="#cotizador" style="padding:9px 20px;color:#fff">Cotizar</a>
+<button class="ib" id="th" title="Cambiar tema" aria-label="Cambiar tema">◐</button></div>
+<button class="ib" id="burger" aria-label="Abrir menú" style="width:44px;height:44px;border-color:var(--ol);color:var(--ol)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav></div></header>
 
-    <script crossorigin src="https://unpkg.com/react@19/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@19/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script type="text/babel" src="app.js"></script>
-  </body>
+<main id="inicio">
+<div class="hero"><div class="w">
+<div><p class="kick" style="color:#c3d27a">Soporte técnico · Software a la medida</p>
+<h1>Tu tecnología, <em>siempre en marcha.</em></h1>
+<p class="lead">Cuidamos tus equipos y construimos el software que tu negocio necesita. Un solo equipo, de la reparación a la aplicación.</p>
+<a class="btn" href="#cotizador" style="background:#c3d27a;border-color:#c3d27a;color:#2f3a1d">Cotizar ahora</a>
+<a class="btn g" href="#servicios" style="margin-left:8px">Ver servicios</a></div>
+<div class="term"><div class="bar"><b></b><b></b><b></b></div><pre id="tm"></pre></div>
+</div></div>
+
+<div class="w"><div class="stats rv">
+<div><b data-n="350">0</b><span>equipos revividos</span></div>
+<div><b data-n="40">0</b><span>proyectos de software</span></div>
+<div><b data-n="24">0</b><span>horas de respuesta máx.</span></div>
+<div><b data-n="98">0</b><span>% clientes que repiten</span></div></div></div>
+
+<section id="nosotros" class="alt"><div class="w ab">
+<div class="rv"><p class="kick">Quiénes somos</p><h2>Tecnología con <em>criterio</em> y cercanía</h2>
+<p>ZYNALIX es un emprendimiento que une dos mundos que casi siempre van separados: el cuidado de tus equipos y la creación de software. Así no tienes que buscar un proveedor para reparar tu computador y otro para construir tu aplicación.</p>
+<p>Trabajamos con personas, familias y negocios que necesitan que su tecnología funcione, y que les expliquen las cosas en palabras claras.</p></div>
+<div class="pil rv"><div><b>Misión</b><span>Mantener la tecnología de nuestros clientes en marcha y crear software que haga crecer sus negocios.</span></div>
+<div><b>Visión</b><span>Ser el aliado tecnológico de confianza de los emprendimientos de la región.</span></div>
+<div><b>Valores</b><span>Transparencia en cada precio, precisión técnica y un trato cercano.</span></div></div></div></section>
+
+<section id="servicios"><div class="w">
+<p class="kick rv">Catálogo</p><h2 class="rv">Lo que hacemos, <em>bien hecho</em></h2>
+<div class="tabs" id="tb"></div><div class="grid" id="gr"></div></div></section>
+
+<section id="cotizador" class="alt"><div class="w">
+<p class="kick rv">Cotizador</p><h2 class="rv">Calcula tu <em>presupuesto</em></h2>
+<p class="rv" style="color:var(--mut);max-width:560px;margin-top:10px">Elige lo que necesitas y obtén un valor estimado al instante. Un técnico lo confirma en menos de 24 horas.</p>
+<div class="qg rv"><div id="ql"></div>
+<aside class="qs"><h3>Tu estimado</h3><div id="qd"></div><div class="qt" id="qt">$0</div>
+<label>Modalidad<select id="qm"><option value="0">Remoto (sin costo)</option><option value="30000">En sitio (+$30.000)</option></select></label>
+<label>Prioridad<select id="qu"><option value="1">Normal</option><option value="1.2">Urgente (+20%)</option></select></label>
+<label>Nombre<input id="qn" autocomplete="name"></label><label>Correo<input id="qe" type="email" autocomplete="email"></label>
+<span class="er" id="qr2"></span>
+<button class="btn" id="qb" type="button"><span class="sp"></span><span id="qbt">Solicitar cotización</span></button><div class="msg" id="qk"></div></aside></div></div></section>
+
+<section id="proceso"><div class="w">
+<p class="kick rv">Cómo trabajamos</p><h2 class="rv">Un proceso claro, <em>sin sorpresas</em></h2>
+<div class="steps rv"><div><h3>Escuchamos</h3><p>Entendemos el problema o la idea antes de tocar nada.</p></div>
+<div><h3>Diagnosticamos</h3><p>Revisión técnica y cotización transparente.</p></div>
+<div><h3>Ejecutamos</h3><p>Reparamos o desarrollamos con avances que puedes ver.</p></div>
+<div><h3>Acompañamos</h3><p>Entrega, capacitación y soporte posterior.</p></div></div></div></section>
+
+<section id="galeria" class="alt"><div class="w"><p class="kick rv">Galería</p><h2 class="rv">Nuestro trabajo, <em>de cerca</em></h2>
+<p class="rv" style="color:var(--mut);max-width:560px;margin-top:10px">Una muestra de lo que hacemos en taller, en sitio y en pantalla. Toca cualquier imagen para verla en grande.</p>
+<div class="gal rv" id="gg"></div></div></section>
+<div class="ov" id="lb"><div class="box" style="max-width:640px"><div class="lbx" id="lbx"></div><h3 id="lbt"></h3><p id="lbd" style="color:var(--mut)"></p>
+<div class="lbn"><button class="btn g" id="lbp" style="padding:9px 18px">← Anterior</button><button class="btn g" id="lbc" style="padding:9px 18px">Cerrar</button><button class="btn g" id="lbs" style="padding:9px 18px">Siguiente →</button></div></div></div>
+
+<section id="ubicacion"><div class="w loc"><div class="rv"><p class="kick">Ubicación</p><h2>Encuéntranos <em>fácil</em></h2>
+<dl><div><dt>Ciudad</dt><dd>Cartagena, Bolívar, Colombia</dd></div>
+<div><dt>Horario</dt><dd>Lunes a viernes, 8:00 a. m. a 6:00 p. m.<br>Sábados, 9:00 a. m. a 1:00 p. m.</dd></div>
+<div><dt>Cobertura</dt><dd>Servicio en sitio en el área metropolitana y soporte remoto en todo el país.</dd></div></dl>
+<a class="btn" style="margin-top:26px" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Cartagena%2C%20Bol%C3%ADvar">Cómo llegar →</a></div>
+<figure class="mp rv"><svg viewBox="0 0 600 400" role="img" aria-label="Mapa de ubicación en Cartagena"><rect class="bg" width="600" height="400"/><path class="rr" d="M-10 310C120 270 200 350 330 310S520 260 620 300"/><ellipse class="pk" cx="120" cy="110" rx="80" ry="50"/><ellipse class="pk" cx="500" cy="90" rx="50" ry="36"/>
+<g class="rd"><path stroke-width="16" d="M0 190H600"/><path stroke-width="16" d="M330 0V400"/><path stroke-width="10" d="M0 90H600M0 270H600M180 0V400M470 0V400"/><path stroke-width="7" d="M0 140H330M330 235H600M250 0V190M400 190V400M90 190V400M540 0V190"/><path stroke-width="12" d="M0 380L600 20"/></g>
+<circle class="pl" cx="330" cy="212" r="10"/><path class="pn" d="M330 215c-14-16-22-27-22-39a22 22 0 0144 0c0 12-8 23-22 39z"/><circle class="pc" cx="330" cy="176" r="8"/></svg><figcaption>ZYNALIX · Cartagena</figcaption></figure></div></section>
+
+<section id="contacto" class="alt"><div class="w ct">
+<div class="rv"><p class="kick">Contacto</p><h2>Hablemos de tu <em>proyecto</em></h2>
+<ul><li>Atención en Cartagena y de forma remota</li><li>Respuesta en menos de 24 horas</li><li>Diagnóstico inicial sin costo</li></ul></div>
+<form id="cf2" class="rv" novalidate>
+<label>Nombre<input id="fn" autocomplete="name"><span class="er"></span></label>
+<label>Correo<input id="fe" type="email" autocomplete="email"><span class="er"></span></label>
+<label>Servicio<select id="fs"></select></label>
+<label>Mensaje<textarea id="fm" rows="4"></textarea><span class="er"></span></label>
+<button class="btn" type="submit"><span class="sp"></span><span id="bt">Enviar mensaje</span></button>
+<div class="msg" id="ok"></div></form></div></section>
+</main>
+
+<footer>
+<div class="w">
+<div class="footer-socials" aria-label="Redes sociales">
+<a class="footer-social" href="https://wa.me/573007542980" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp" title="WhatsApp">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.8a8.6 8.6 0 0 1-12.7 7.5L3 20.5l1.3-4.6a8.6 8.6 0 1 1 16.2-4.1Z"/><path d="M8.8 8.2c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4 0 .5l-.5.7c-.2.2-.3.4-.1.6.3.6.8 1.1 1.3 1.5.6.5 1.2.8 1.8 1 .2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.6-.1l1.5.7c.2.1.4.2.4.4 0 .3-.2 1.1-.6 1.5-.4.4-1 .7-1.6.7-.5 0-1.1-.1-1.7-.4-.7-.3-1.5-.7-2.4-1.5a11 11 0 0 1-2.1-2.2c-.6-.9-.9-1.7-.9-2.4 0-.6.2-1.1.5-1.5Z"/></svg>
+</a>
+<span class="footer-social footer-social-placeholder" role="img" aria-label="Instagram, enlace próximamente" title="Instagram · enlace próximamente">
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".7" fill="currentColor" stroke="none"/></svg>
+</span>
+<span class="footer-social footer-social-placeholder" role="img" aria-label="Facebook, enlace próximamente" title="Facebook · enlace próximamente">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h3l.5-4H14V7c0-1.2.4-2 2-2h1.7V1.4C17 1.2 15.8 1 14.5 1 11.3 1 9 2.9 9 6.5V9H6v4h3v8z"/></svg>
+</span>
+<span class="footer-social footer-social-placeholder" role="img" aria-label="TikTok, enlace próximamente" title="TikTok · enlace próximamente">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.2a4.2 4.2 0 1 1-3.5-4.1"/><path d="M14 3c.4 3 2.2 4.7 5 5"/></svg>
+</span>
+<span class="footer-social footer-social-placeholder" role="img" aria-label="YouTube, enlace próximamente" title="YouTube · enlace próximamente">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12s0-4-1-5-9-1-9-1-8 0-9 1-1 5-1 5 0 4 1 5 9 1 9 1 8 0 9-1 1-5 1-5Z"/><path d="m10 9 5 3-5 3z"/></svg>
+</span>
+<span class="footer-social footer-social-placeholder" role="img" aria-label="LinkedIn, enlace próximamente" title="LinkedIn · enlace próximamente">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v11M4 4v.1M9 20v-6a5 5 0 0 1 10 0v6M9 9v11"/></svg>
+</span>
+</div>
+<div class="footer-meta">
+<div class="footer-legal"><button type="button" data-legal="privacy">Privacidad</button><button type="button" data-legal="terms">Términos y condiciones</button>
+<button id="ad" class="footer-login" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg>Acceso administrador</button></div>
+<small class="footer-copy">© 2026 ZYNALIX · Hecho en Colombia</small>
+</div>
+</div>
+</footer>
+
+<div class="ov" id="lg"><div class="box"><h3>Panel de administrador</h3><p style="color:var(--mut);font-size:.9rem">Demo: usuario <b>admin</b> · clave <b>olivo2026</b></p>
+<form id="lf" novalidate><label>Usuario<input id="lu"></label><label>Contraseña<input id="lp" type="password"></label><span class="er" id="le"></span>
+<button class="btn" type="submit">Entrar</button><button class="btn g" type="button" data-x>Cerrar</button></form></div></div>
+
+<div class="ov" id="legal" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+<div class="box legal-box">
+<div class="legal-heading"><h3 id="legal-title"></h3><button class="ib" type="button" data-x aria-label="Cerrar aviso">×</button></div>
+<div id="legal-content"></div>
+<button class="btn g" type="button" data-x>Cerrar</button>
+</div></div>
+
+<div class="ov" id="pa"><div class="box big"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Panel privado</h3><button class="btn g" data-x>Cerrar sesión</button></div>
+<div class="tabs"><button class="tab on" data-p="m">Mensajes</button><button class="tab" data-p="s">Servicios</button></div>
+<div id="pm"></div>
+<div id="ps" style="display:none"><div id="pl"></div>
+<form id="sf" novalidate><label>Nombre<input id="sn"></label><label>Categoría<select id="sc"><option>Mantenimiento</option><option>Desarrollo</option></select></label>
+<label>Precio<input id="sp" placeholder="Desde $50.000"></label><label>Descripción<input id="sd"></label><button class="btn" type="submit">Añadir servicio</button></form></div></div></div>
+
+<div id="cb"><div id="pn"><header>Zyna, asistente<small>Resuelve tus dudas sobre servicios y atención</small></header>
+<div id="ms" aria-live="polite"></div><div class="ch" id="qr"></div>
+<form id="cf" autocomplete="off"><input id="ci" placeholder="Escribe tu pregunta…"><button class="btn" type="submit" style="padding:10px 16px" aria-label="Enviar mensaje">↑</button></form></div>
+<button id="cbt" aria-label="Abrir asistente">Zy</button></div>
+
+<script src="app.js"></script>
+</body>
 </html>

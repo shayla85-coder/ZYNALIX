@@ -2,7 +2,7 @@
 
 ## Ejecutar el sitio
 
-Se necesita Node.js 20 o posterior. El frontend está construido con React para renderizar la landing page y los formularios, y el servidor sigue manejando la API y la persistencia del negocio.
+Se necesita Node.js 20 o posterior. El chat original responde con unas pocas respuestas predefinidas y no requiere una clave de Gemini.
 
 En PowerShell, desde la carpeta del proyecto, ejecuta:
 
