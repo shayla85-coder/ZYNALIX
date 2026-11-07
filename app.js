@@ -1,6 +1,7 @@
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const STATIC_PREVIEW=window.ZYNALIX_STATIC===true;
 async function api(url,options={}){
  const response=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}});
  let result;
@@ -17,9 +18,10 @@ const BASE=[
 {n:"Aplicaciones a la medida",c:"Desarrollo",p:"Cotización",d:"Sistemas de inventario, reservas o gestión hechos para tu negocio."},
 {n:"Tiendas en línea",c:"Desarrollo",p:"Desde $1.200.000",d:"Catálogo, carrito y panel para administrar tus productos."},
 {n:"Automatización con IA",c:"Desarrollo",p:"Cotización",d:"Chatbots y flujos que atienden a tus clientes por ti."}];
-let S=BASE,cat="Todos";
+let S=BASE.map((service,index)=>({id:index+1,...service})),cat="Todos";
 
 async function loadServices(){
+ if(STATIC_PREVIEW)return;
  try{
   const result=await api("/api/services");
   if(!Array.isArray(result.services))throw new Error("El catálogo recibido no es válido.");
@@ -65,11 +67,28 @@ $("#burger").onclick=()=>$("#lk").classList.toggle("on");$("#lk").onclick=()=>$(
 $("#th").onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=d?"light":"dark"};
 
 /* Formulario de contacto */
+function showWhatsAppMessage(container,message,label){
+ const link=document.createElement("a");
+ link.href=`https://wa.me/573007542980?text=${encodeURIComponent(message)}`;
+ link.target="_blank";
+ link.rel="noopener noreferrer";
+ link.textContent=label;
+ container.replaceChildren(document.createTextNode("No se ha enviado ni guardado. "),link);
+}
+$("#static-notice").hidden=!STATIC_PREVIEW;
+$("#ad").hidden=STATIC_PREVIEW;
 $("#cf2").onsubmit=async e=>{e.preventDefault();
  const f=[["#fn",v=>v.trim().length>=3,"Escribe tu nombre completo."],["#fe",v=>/^\S+@\S+\.\S+$/.test(v),"Ingresa un correo válido."],["#fm",v=>v.trim().length>=10,"Cuéntanos un poco más (mínimo 10 letras)."]];let ok=true;
  f.forEach(([s,fn,m])=>{const i=$(s),er=i.nextElementSibling,g=fn(i.value);i.classList.toggle("bad",!g);er.textContent=g?"":m;if(!g)ok=false});
  if(!ok)return;
  const button=e.target.querySelector('button[type="submit"]'),o=$("#ok");
+ if(STATIC_PREVIEW){
+  const message=["Hola, quiero hacer una consulta a ZYNALIX.","Nombre: "+$("#fn").value.trim(),"Correo: "+$("#fe").value.trim(),"Servicio: "+$("#fs").value,"Mensaje: "+$("#fm").value.trim()].join("\n");
+  o.classList.remove("error");o.style.display="block";
+  showWhatsAppMessage(o,message,"Continúa y envía el mensaje por WhatsApp");
+  f.forEach(([s])=>$(s).classList.remove("bad"));
+  return;
+ }
  button.disabled=true;o.classList.remove("error");o.style.display="none";
  try{
   await api("/api/contact",{method:"POST",body:JSON.stringify({name:$("#fn").value.trim(),email:$("#fe").value.trim(),service:$("#fs").value,message:$("#fm").value.trim()})});
@@ -84,14 +103,18 @@ $$("[data-x]").forEach(b=>b.onclick=()=>b.closest(".ov").classList.remove("on"))
 $$(".ov").forEach(o=>o.onclick=e=>{if(e.target==o)o.classList.remove("on")});
 const legalNotices={
  privacy:{title:"Aviso de privacidad",paragraphs:[
-  "Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en un archivo local del servidor para que ZYNALIX pueda atender la solicitud. El personal administrador autorizado puede consultar esos registros. No compartas contraseñas, datos bancarios ni información sensible.",
-  "Si el chat con Gemini está configurado, las preguntas se envían a Google para generar respuestas; este sitio no guarda el historial de la conversación.",
+  STATIC_PREVIEW
+   ?"La vista publicada en GitHub Pages no guarda datos. Si eliges continuar por WhatsApp, el mensaje con los datos que incluiste se abrirá allí para que decidas si lo envías."
+   :"Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en un archivo local del servidor para que ZYNALIX pueda atender la solicitud. El personal administrador autorizado puede consultar esos registros.",
+  "El asistente responde con opciones predefinidas en el navegador; las preguntas no se envían a Google ni se guardan.",
   "Las fuentes tipográficas se cargan desde Google Fonts y el enlace de ubicación abre Google Maps. Esos servicios externos pueden recibir datos técnicos de tu conexión cuando los visitas.",
   "Este aviso describe el comportamiento técnico actual y no reemplaza una política legal revisada para el negocio. Antes de publicar el sitio, agrega los datos de contacto del responsable del tratamiento y valida la política aplicable."
  ]},
  terms:{title:"Términos y condiciones",paragraphs:[
   "Los servicios y precios mostrados son informativos. El cotizador presenta una estimación; el alcance, el precio final y el plazo deben confirmarse antes de iniciar cualquier trabajo.",
-   "Las solicitudes de contacto y cotizaciones se guardan en el servidor para que ZYNALIX pueda gestionarlas.",
+   STATIC_PREVIEW
+    ?"Esta publicación es una vista estática. El panel administrativo y el almacenamiento no están disponibles; los formularios solo preparan un mensaje para WhatsApp."
+    :"Las solicitudes de contacto y cotizaciones se guardan en el servidor para que ZYNALIX pueda gestionarlas.",
   "El uso de enlaces externos, como Google Maps y Google Fonts, está sujeto a las condiciones de sus respectivos proveedores.",
    "Esta página aún no sustituye los términos legales definitivos del negocio."
  ]}
@@ -152,7 +175,7 @@ function cop(n){return "$"+Math.round(n).toLocaleString("es-CO")}
 function drawQ(){$("#ql").innerHTML=S.map((s,i)=>`<label class="qi"><input type="checkbox" data-i="${i}"><span><b>${esc(s.n)}</b><small>${esc(s.p)}</small></span><input class="qq" type="number" min="1" max="20" value="1" data-i="${i}" aria-label="Cantidad"></label>`).join("");calcQ()}
 function calcQ(){let b=0,pend=0,det=[],items=[];
  $$("#ql input[type=checkbox]:checked").forEach(c=>{const i=c.dataset.i,q=Math.min(20,Math.max(1,+$(`.qq[data-i="${i}"]`).value||1)),v=num(S[i].p);b+=v*q;if(!v)pend++;det.push(S[i].n+" ×"+q+(v?" · "+cop(v*q):" · por cotizar"));items.push({serviceId:S[i].id,name:S[i].n,quantity:q,unitPrice:v,subtotal:v*q})});
- const t=det.length?b*(($("#qu").value==="urgent")?1.2:1)+($("#qm").value==="onsite"?30000:0):0;
+ const t=det.length?b*(($("#qu").value==="1.2")?1.2:1)+($("#qm").value==="30000"?30000:0):0;
  $("#qd").innerHTML=det.length?det.map(x=>esc(x)).join("<br>"):"Selecciona uno o más servicios.";
  $("#qt").innerHTML=cop(t)+(pend?`<small style="font:500 .8rem Schibsted Grotesk;color:var(--mut)"> + ${pend} por cotizar</small>`:"");
  return{t,det,pend,items}}
@@ -163,10 +186,18 @@ $("#qb").onclick=async()=>{const r=calcQ(),n=$("#qn").value.trim(),e=$("#qe").va
  if(n.length<3){er.textContent="Escribe tu nombre.";return}
  if(!/^\S+@\S+\.\S+$/.test(e)){er.textContent="Ingresa un correo válido.";return}
  er.textContent="";
+ if(STATIC_PREVIEW){
+  const o=$("#qk");
+  o.classList.remove("error");o.style.display="block";
+  const services=r.items.map(item=>`${item.name} ×${item.quantity} (${item.unitPrice?cop(item.subtotal):"por cotizar"})`).join("\n");
+  const message=["Hola, quiero solicitar una cotización a ZYNALIX.","Nombre: "+n,"Correo: "+e,"Servicios:\n"+services,"Modalidad: "+($("#qm").value==="30000"?"En sitio":"Remoto"),"Prioridad: "+($("#qu").value==="1.2"?"Urgente":"Normal"),"Estimado: "+cop(r.t)+(r.pend?` + ${r.pend} por cotizar`:"")].join("\n");
+  showWhatsAppMessage(o,message,"Continúa y envía la cotización por WhatsApp");
+  return;
+ }
  if(r.items.some(item=>!item.serviceId)){er.textContent="No se pudo cargar el catálogo. Recarga la página e inténtalo de nuevo.";return}
  const button=$("#qb"),o=$("#qk");button.disabled=true;o.classList.remove("error");o.style.display="none";
  try{
-  const result=await api("/api/quotes",{method:"POST",body:JSON.stringify({name:n,email:e,items:r.items.map(item=>({serviceId:item.serviceId,quantity:item.quantity})),modality:$("#qm").value==="onsite"?"onsite":"remote",priority:$("#qu").value==="urgent"?"urgent":"normal"})});
+  const result=await api("/api/quotes",{method:"POST",body:JSON.stringify({name:n,email:e,items:r.items.map(item=>({serviceId:item.serviceId,quantity:item.quantity})),modality:$("#qm").value==="30000"?"onsite":"remote",priority:$("#qu").value==="1.2"?"urgent":"normal"})});
   o.textContent=`¡Listo! Guardamos tu solicitud de cotización. Estimado: ${cop(Number(result.estimatedTotal))}${result.pendingItems?` + ${result.pendingItems} por cotizar`:""}. Te contactaremos en menos de 24 horas.`;
  }catch(error){o.textContent=error.message;o.classList.add("error")}
  finally{button.disabled=false;o.style.display="block"}

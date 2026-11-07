@@ -693,6 +693,14 @@ a.footer-social:hover {
   color: var(--mut);
 }
 
+.static-notice {
+  padding: 12px 20px;
+  background: var(--sage);
+  color: var(--ink);
+  text-align: center;
+  font-size: .9rem;
+}
+
 .legal-box {
   display: grid;
   gap: 16px;

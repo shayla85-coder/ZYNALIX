@@ -38,6 +38,7 @@ test("serves the page and does not expose server files", async () => {
   assert.equal(page.status, 200);
   assert.match(page.headers.get("content-security-policy"), /connect-src 'self'/);
   assert.match(await page.text(), /<!DOCTYPE html>/i);
+  assert.equal((await fetch(`${base}/site-config.js`)).status, 200);
   assert.equal((await fetch(`${base}/server.js`)).status, 404);
 });
 
