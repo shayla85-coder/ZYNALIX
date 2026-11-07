@@ -777,6 +777,7 @@ a.footer-social:hover {
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
   font-size: .9rem;
+  white-space: pre-wrap;
 }
 
 .row small {

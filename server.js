@@ -2,7 +2,6 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
-const { initializeDatabase } = require("./database");
 
 const ROOT = __dirname;
 const MAX_BODY_BYTES = 40_000;
@@ -12,6 +11,16 @@ const MAX_HISTORY_LENGTH = 9_000;
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
 const ADMIN_SESSION_MS = 8 * 60 * 60 * 1000;
+const DEFAULT_SERVICES = [
+  ["Mantenimiento preventivo", "Mantenimiento", "Desde $50.000", "Limpieza interna, pasta térmica y revisión completa para que rinda como el primer día."],
+  ["Reparación y formateo", "Mantenimiento", "Desde $60.000", "Instalación de sistema, programas y respaldo de tu información."],
+  ["Redes y WiFi", "Mantenimiento", "Desde $80.000", "Cobertura estable en casa u oficina, configuración y seguridad."],
+  ["Recuperación de datos", "Mantenimiento", "Cotización", "Rescatamos archivos de discos y memorias dañadas."],
+  ["Páginas web", "Desarrollo", "Desde $600.000", "Sitios rápidos, responsive y con tu identidad de marca."],
+  ["Aplicaciones a la medida", "Desarrollo", "Cotización", "Sistemas de inventario, reservas o gestión hechos para tu negocio."],
+  ["Tiendas en línea", "Desarrollo", "Desde $1.200.000", "Catálogo, carrito y panel para administrar tus productos."],
+  ["Automatización con IA", "Desarrollo", "Cotización", "Chatbots y flujos que atienden a tus clientes por ti."]
+];
 const MODEL_INSTRUCTIONS = `Eres Zyna, asistente virtual de ZYNALIX, un negocio de Cartagena, Colombia que ofrece mantenimiento y reparación de computadores, redes y WiFi, recuperación de datos, páginas web, tiendas en línea, aplicaciones a la medida y automatización.
 Responde en español, con tono amable, claro y breve. Responde preguntas generales con naturalidad, pero prioriza orientar sobre tecnología, los servicios y la atención de ZYNALIX. No inventes precios, garantías, medios de pago, disponibilidad, diagnósticos ni promesas. Los precios de referencia publicados son: mantenimiento preventivo desde $50.000; reparación y formateo desde $60.000; redes y WiFi desde $80.000; páginas web desde $600.000; tiendas en línea desde $1.200.000. Recuperación de datos, aplicaciones a la medida y automatización requieren cotización. La atención es en Cartagena y el soporte remoto cubre Colombia; el horario publicado es lunes a viernes de 8:00 a. m. a 6:00 p. m. y sábados de 9:00 a. m. a 1:00 p. m.; la respuesta se ofrece en menos de 24 horas.
 Cuando no conozcas un dato, dilo claramente y orienta al formulario de contacto o al WhatsApp del sitio. No solicites contraseñas, datos bancarios ni información sensible. Para incidentes de hardware potencialmente peligrosos, recomienda apagar y desconectar el equipo. No afirmes que eres una persona ni que realizaste acciones fuera de este chat.`;
@@ -112,6 +121,18 @@ function validateMessages(body) {
   return messages;
 }
 
+function checkRateLimit(limits, key, max, windowMs) {
+  const now = Date.now();
+  const entry = limits.get(key);
+  if (!entry || now - entry.startedAt >= windowMs) {
+    limits.set(key, { startedAt: now, count: 1 });
+    return false;
+  }
+  if (entry.count >= max) return true;
+  entry.count += 1;
+  return false;
+}
+
 function validateText(value, label, maxLength) {
   if (typeof value !== "string" || !value.trim() || value.trim().length > maxLength) {
     throw new HttpError(400, `${label} es obligatorio y no debe exceder ${maxLength} caracteres.`);
@@ -127,23 +148,80 @@ function validateEmail(value) {
   return email.toLowerCase();
 }
 
-function requireDatabase(pool) {
-  if (!pool) {
-    throw new HttpError(503, "La base de datos no está configurada en el servidor.");
-  }
-  return pool;
+function numericPrice(price) {
+  const match = String(price).replace(/\./g, "").match(/\d+/);
+  return match ? Number(match[0]) : 0;
 }
 
-function checkRateLimit(limits, key, max, windowMs) {
-  const now = Date.now();
-  const entry = limits.get(key);
-  if (!entry || now - entry.startedAt >= windowMs) {
-    limits.set(key, { startedAt: now, count: 1 });
-    return false;
+function createStore(filePath) {
+  let state;
+  let loading;
+  let writes = Promise.resolve();
+
+  async function load() {
+    if (state) return state;
+    if (!loading) {
+      loading = (async () => {
+        try {
+          state = JSON.parse(await fs.promises.readFile(filePath, "utf8"));
+          if (!state || !Array.isArray(state.services) ||
+              !Array.isArray(state.messages) || !Array.isArray(state.quotes) ||
+              !Number.isSafeInteger(state.nextServiceId) ||
+              !Number.isSafeInteger(state.nextRecordId)) {
+            throw new Error("El archivo de datos del panel no tiene el formato esperado.");
+          }
+        } catch (error) {
+          if (error.code !== "ENOENT") throw error;
+          state = {
+            services: DEFAULT_SERVICES.map(([name, category, price, description], index) => ({
+              id: index + 1,
+              n: name,
+              c: category,
+              p: price,
+              d: description
+            })),
+            messages: [],
+            quotes: [],
+            nextServiceId: DEFAULT_SERVICES.length + 1,
+            nextRecordId: 1
+          };
+          await persist(state);
+        }
+        return state;
+      })();
+    }
+    return loading;
   }
-  if (entry.count >= max) return true;
-  entry.count += 1;
-  return false;
+
+  async function persist(value) {
+    await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+    const temporaryPath = `${filePath}.${process.pid}.${crypto.randomUUID()}.tmp`;
+    try {
+      await fs.promises.writeFile(temporaryPath, JSON.stringify(value, null, 2), {
+        encoding: "utf8",
+        mode: 0o600
+      });
+      await fs.promises.rename(temporaryPath, filePath);
+    } catch (error) {
+      await fs.promises.rm(temporaryPath, { force: true }).catch(() => {});
+      throw error;
+    }
+  }
+
+  function update(change) {
+    const operation = writes.then(async () => {
+      const current = await load();
+      const next = structuredClone(current);
+      const result = change(next);
+      await persist(next);
+      state = next;
+      return result;
+    });
+    writes = operation.catch(() => {});
+    return operation;
+  }
+
+  return { load, update };
 }
 
 function parseCookies(header = "") {
@@ -185,34 +263,17 @@ function sameOrigin(req) {
   }
 }
 
-function numericPrice(price) {
-  const match = String(price).replace(/\./g, "").match(/\d+/);
-  return match ? Number(match[0]) : 0;
-}
-
-function validateQuoteItems(value) {
-  if (!Array.isArray(value) || !value.length || value.length > 8) {
-    throw new HttpError(400, "Selecciona entre uno y ocho servicios.");
+function requireJson(req) {
+  if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
+    throw new HttpError(415, "La solicitud debe ser JSON.");
   }
-  const seen = new Set();
-  return value.map(item => {
-    const id = Number(item?.serviceId);
-    const quantity = Number(item?.quantity);
-    if (!Number.isSafeInteger(id) || id < 1 ||
-        !Number.isInteger(quantity) || quantity < 1 || quantity > 20 ||
-        seen.has(id)) {
-      throw new HttpError(400, "Uno de los servicios o cantidades no es válido.");
-    }
-    seen.add(id);
-    return { serviceId: id, quantity };
-  });
 }
 
 function createServer({
   apiKey = process.env.GEMINI_API_KEY,
   model = process.env.GEMINI_MODEL || "gemini-3.6-flash",
   fetchImpl = fetch,
-  pool = null,
+  storeFile = path.join(ROOT, "data", "zynalix.json"),
   adminUsername = process.env.ADMIN_USERNAME,
   adminPassword = process.env.ADMIN_PASSWORD,
   sessionSecret = process.env.ADMIN_SESSION_SECRET,
@@ -225,139 +286,37 @@ function createServer({
   const requestsByIp = new Map();
   const formRequestsByIp = new Map();
   const loginRequestsByIp = new Map();
+  const store = createStore(storeFile);
   const server = http.createServer(async (req, res) => {
     setSecurityHeaders(res);
     const pathname = new URL(req.url, "http://localhost").pathname;
     const clientIp = req.socket.remoteAddress || "unknown";
 
-    if (pathname === "/api/services" && req.method === "GET") {
-      try {
-        const database = requireDatabase(pool);
-        const result = await database.query(
-          "SELECT id, name AS n, category AS c, price AS p, description AS d FROM services ORDER BY id"
-        );
-        return sendJson(res, 200, { services: result.rows });
-      } catch (error) {
-        if (error instanceof HttpError) return sendJson(res, error.status, { error: error.message });
-        console.error("No se pudo consultar el catálogo:", error.message);
-        return sendJson(res, 500, { error: "No se pudo cargar el catálogo de servicios." });
-      }
-    }
-
-    if (pathname === "/api/contact" && req.method === "POST") {
-      if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
-        return sendJson(res, 415, { error: "La solicitud debe ser JSON." });
-      }
-      if (!sameOrigin(req)) return sendJson(res, 403, { error: "Origen de solicitud no permitido." });
-      if (checkRateLimit(formRequestsByIp, `contact:${clientIp}`, 5, 60 * 60 * 1000)) {
-        return sendJson(res, 429, { error: "Se alcanzó el límite de solicitudes. Inténtalo más tarde." });
-      }
-      try {
-        const body = await readJsonBody(req);
-        const name = validateText(body?.name, "El nombre", 120);
-        const email = validateEmail(body?.email);
-        const service = validateText(body?.service, "El servicio", 120);
-        const message = validateText(body?.message, "El mensaje", 2_000);
-        const database = requireDatabase(pool);
-        const result = await database.query(
-          `INSERT INTO contact_messages (name, email, service, message)
-           VALUES ($1, $2, $3, $4) RETURNING id`,
-          [name, email, service, message]
-        );
-        return sendJson(res, 201, { id: result.rows[0].id, message: "Solicitud guardada." });
-      } catch (error) {
-        if (error instanceof HttpError) return sendJson(res, error.status, { error: error.message });
-        console.error("No se pudo guardar el formulario de contacto:", error.message);
-        return sendJson(res, 500, { error: "No pudimos guardar tu solicitud. Inténtalo de nuevo." });
-      }
-    }
-
-    if (pathname === "/api/quotes" && req.method === "POST") {
-      if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
-        return sendJson(res, 415, { error: "La solicitud debe ser JSON." });
-      }
-      if (!sameOrigin(req)) return sendJson(res, 403, { error: "Origen de solicitud no permitido." });
-      if (checkRateLimit(formRequestsByIp, `quote:${clientIp}`, 5, 60 * 60 * 1000)) {
-        return sendJson(res, 429, { error: "Se alcanzó el límite de cotizaciones. Inténtalo más tarde." });
-      }
-      try {
-        const body = await readJsonBody(req);
-        const name = validateText(body?.name, "El nombre", 120);
-        const email = validateEmail(body?.email);
-        const items = validateQuoteItems(body?.items);
-        const modality = body?.modality;
-        const priority = body?.priority;
-        if (!["remote", "onsite"].includes(modality) || !["normal", "urgent"].includes(priority)) {
-          throw new HttpError(400, "La modalidad o prioridad no es válida.");
-        }
-
-        const database = requireDatabase(pool);
-        const ids = items.map(item => item.serviceId);
-        const services = await database.query(
-          "SELECT id, name, price FROM services WHERE id = ANY($1::bigint[])",
-          [ids]
-        );
-        if (services.rows.length !== items.length) {
-          throw new HttpError(400, "Uno de los servicios ya no está disponible.");
-        }
-        const itemById = new Map(items.map(item => [item.serviceId, item.quantity]));
-        const snapshot = services.rows.map(service => {
-          const quantity = itemById.get(Number(service.id));
-          const unitPrice = numericPrice(service.price);
-          return {
-            serviceId: Number(service.id),
-            name: service.name,
-            quantity,
-            unitPrice,
-            subtotal: unitPrice * quantity
-          };
-        });
-        const pendingItems = snapshot.filter(item => item.unitPrice === 0).length;
-        const baseTotal = snapshot.reduce((sum, item) => sum + item.subtotal, 0);
-        const total = baseTotal * (priority === "urgent" ? 1.2 : 1) +
-          (modality === "onsite" ? 30_000 : 0);
-        const result = await database.query(
-          `INSERT INTO quotes
-            (name, email, modality, priority, estimated_total, pending_items, items)
-           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb) RETURNING id`,
-          [name, email, modality, priority, total, pendingItems, JSON.stringify(snapshot)]
-        );
-        return sendJson(res, 201, { id: result.rows[0].id, estimatedTotal: total, pendingItems });
-      } catch (error) {
-        if (error instanceof HttpError) return sendJson(res, error.status, { error: error.message });
-        console.error("No se pudo guardar la cotización:", error.message);
-        return sendJson(res, 500, { error: "No pudimos guardar tu cotización. Inténtalo de nuevo." });
-      }
-    }
-
-    if (pathname.startsWith("/api/admin/")) {
-      const method = req.method;
-      if (["POST", "DELETE", "PATCH"].includes(method) && !sameOrigin(req)) {
+    if (pathname.startsWith("/api/admin/") || pathname === "/api/services" ||
+        pathname === "/api/contact" || pathname === "/api/quotes") {
+      if (["POST", "DELETE", "PATCH"].includes(req.method) && !sameOrigin(req)) {
         return sendJson(res, 403, { error: "Origen de solicitud no permitido." });
       }
 
-      if (pathname === "/api/admin/login" && method === "POST") {
-        if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
-          return sendJson(res, 415, { error: "La solicitud debe ser JSON." });
-        }
-        if (!adminUsername || !adminPassword || !sessionSecret || sessionSecret.length < 32) {
-          return sendJson(res, 503, {
-            error: "Configura ADMIN_USERNAME, ADMIN_PASSWORD y una clave ADMIN_SESSION_SECRET de al menos 32 caracteres."
-          });
-        }
-        if (checkRateLimit(loginRequestsByIp, clientIp, 5, 15 * 60 * 1000)) {
-          return sendJson(res, 429, { error: "Demasiados intentos. Espera 15 minutos." });
-        }
+      if (pathname === "/api/admin/login" && req.method === "POST") {
         try {
+          requireJson(req);
+          if (!adminUsername || !adminPassword || adminPassword.length < 12 ||
+              !sessionSecret || sessionSecret.length < 32) {
+            return sendJson(res, 503, {
+              error: "Configura ADMIN_USERNAME, ADMIN_PASSWORD (mínimo 12 caracteres) y ADMIN_SESSION_SECRET (mínimo 32 caracteres)."
+            });
+          }
+          if (checkRateLimit(loginRequestsByIp, clientIp, 5, 15 * 60 * 1000)) {
+            return sendJson(res, 429, { error: "Demasiados intentos. Espera 15 minutos." });
+          }
           const body = await readJsonBody(req);
-          const username = typeof body?.username === "string" ? body.username : "";
-          const password = typeof body?.password === "string" ? body.password : "";
           const matches = (provided, expected) => {
-            const left = Buffer.from(provided);
+            const left = Buffer.from(typeof provided === "string" ? provided : "");
             const right = Buffer.from(expected);
             return left.length === right.length && crypto.timingSafeEqual(left, right);
           };
-          if (!matches(username, adminUsername) || !matches(password, adminPassword)) {
+          if (!matches(body?.username, adminUsername) || !matches(body?.password, adminPassword)) {
             return sendJson(res, 401, { error: "Usuario o contraseña incorrectos." });
           }
           const expiresAt = Date.now() + ADMIN_SESSION_MS;
@@ -371,69 +330,153 @@ function createServer({
         }
       }
 
-      if (pathname === "/api/admin/logout" && method === "POST") {
+      if (pathname === "/api/admin/logout" && req.method === "POST") {
         res.setHeader("Set-Cookie", "zynalix_admin=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0" +
           (secureCookies ? "; Secure" : ""));
         return sendJson(res, 200, { message: "Sesión cerrada." });
       }
 
-      if (!isAdminRequest(req, sessionSecret)) {
+      if (pathname.startsWith("/api/admin/") &&
+          !isAdminRequest(req, sessionSecret)) {
         return sendJson(res, 401, { error: "Inicia sesión para acceder al panel." });
       }
 
       try {
-        const database = requireDatabase(pool);
-        if (pathname === "/api/admin/session" && method === "GET") {
-          return sendJson(res, 200, { authenticated: true });
+        if (pathname === "/api/services" && req.method === "GET") {
+          return sendJson(res, 200, { services: (await store.load()).services });
         }
-        if (pathname === "/api/admin/messages" && method === "GET") {
-          const result = await database.query(
-            "SELECT id, name, email, service, message, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 100"
-          );
-          return sendJson(res, 200, { messages: result.rows });
-        }
-        if (pathname === "/api/admin/quotes" && method === "GET") {
-          const result = await database.query(
-            "SELECT id, name, email, modality, priority, estimated_total, pending_items, items, created_at FROM quotes ORDER BY created_at DESC LIMIT 100"
-          );
-          return sendJson(res, 200, { quotes: result.rows });
-        }
-        if (pathname === "/api/admin/services" && method === "POST") {
-          if (!req.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
-            return sendJson(res, 415, { error: "La solicitud debe ser JSON." });
+        if (pathname === "/api/contact" && req.method === "POST") {
+          requireJson(req);
+          if (checkRateLimit(formRequestsByIp, `contact:${clientIp}`, 5, 60 * 60 * 1000)) {
+            return sendJson(res, 429, { error: "Se alcanzó el límite de solicitudes. Inténtalo más tarde." });
           }
           const body = await readJsonBody(req);
-          const service = [
-            validateText(body?.name, "El nombre", 120),
-            validateText(body?.category, "La categoría", 60),
-            validateText(body?.price, "El precio", 80),
-            validateText(body?.description, "La descripción", 500)
-          ];
-          const result = await database.query(
-            `INSERT INTO services (name, category, price, description)
-             VALUES ($1, $2, $3, $4)
-             RETURNING id, name AS n, category AS c, price AS p, description AS d`,
-            service
-          );
-          return sendJson(res, 201, { service: result.rows[0] });
+          const message = {
+            id: 0,
+            name: validateText(body?.name, "El nombre", 120),
+            email: validateEmail(body?.email),
+            service: validateText(body?.service, "El servicio", 120),
+            message: validateText(body?.message, "El mensaje", 2_000),
+            created_at: new Date().toISOString()
+          };
+          message.id = await store.update(data => {
+            message.id = data.nextRecordId++;
+            data.messages.unshift(message);
+            return message.id;
+          });
+          return sendJson(res, 201, { id: message.id, message: "Solicitud guardada." });
+        }
+        if (pathname === "/api/quotes" && req.method === "POST") {
+          requireJson(req);
+          if (checkRateLimit(formRequestsByIp, `quote:${clientIp}`, 5, 60 * 60 * 1000)) {
+            return sendJson(res, 429, { error: "Se alcanzó el límite de cotizaciones. Inténtalo más tarde." });
+          }
+          const body = await readJsonBody(req);
+          const name = validateText(body?.name, "El nombre", 120);
+          const email = validateEmail(body?.email);
+          if (!Array.isArray(body?.items) || !body.items.length ||
+              body.items.length > DEFAULT_SERVICES.length) {
+            throw new HttpError(400, "Selecciona entre uno y ocho servicios.");
+          }
+          if (!["remote", "onsite"].includes(body?.modality) ||
+              !["normal", "urgent"].includes(body?.priority)) {
+            throw new HttpError(400, "La modalidad o prioridad no es válida.");
+          }
+          const quote = await store.update(data => {
+            const seen = new Set();
+            const items = body.items.map(item => {
+              const serviceId = Number(item?.serviceId);
+              const quantity = Number(item?.quantity);
+              if (!Number.isSafeInteger(serviceId) || !Number.isInteger(quantity) ||
+                  quantity < 1 || quantity > 20 || seen.has(serviceId)) {
+                throw new HttpError(400, "Uno de los servicios o cantidades no es válido.");
+              }
+              seen.add(serviceId);
+              const service = data.services.find(entry => entry.id === serviceId);
+              if (!service) throw new HttpError(400, "Uno de los servicios ya no está disponible.");
+              const unitPrice = numericPrice(service.p);
+              return {
+                serviceId,
+                name: service.n,
+                quantity,
+                unitPrice,
+                subtotal: unitPrice * quantity
+              };
+            });
+            const pendingItems = items.filter(item => item.unitPrice === 0).length;
+            const baseTotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+            const estimatedTotal = baseTotal * (body.priority === "urgent" ? 1.2 : 1) +
+              (body.modality === "onsite" ? 30_000 : 0);
+            const savedQuote = {
+              id: data.nextRecordId++,
+              name,
+              email,
+              modality: body.modality,
+              priority: body.priority,
+              estimated_total: estimatedTotal,
+              pending_items: pendingItems,
+              items,
+              created_at: new Date().toISOString()
+            };
+            data.quotes.unshift(savedQuote);
+            return savedQuote;
+          });
+          return sendJson(res, 201, {
+            id: quote.id,
+            estimatedTotal: quote.estimated_total,
+            pendingItems: quote.pending_items
+          });
+        }
+        if (pathname === "/api/admin/session" && req.method === "GET") {
+          return sendJson(res, 200, { authenticated: true });
+        }
+        if (pathname === "/api/admin/messages" && req.method === "GET") {
+          return sendJson(res, 200, { messages: (await store.load()).messages.slice(0, 100) });
+        }
+        if (pathname === "/api/admin/quotes" && req.method === "GET") {
+          return sendJson(res, 200, { quotes: (await store.load()).quotes.slice(0, 100) });
+        }
+        if (pathname === "/api/admin/services" && req.method === "GET") {
+          return sendJson(res, 200, { services: (await store.load()).services });
+        }
+        if (pathname === "/api/admin/services" && req.method === "POST") {
+          requireJson(req);
+          const body = await readJsonBody(req);
+          const service = {
+            n: validateText(body?.name, "El nombre", 120),
+            c: validateText(body?.category, "La categoría", 60),
+            p: validateText(body?.price, "El precio", 80),
+            d: validateText(body?.description, "La descripción", 500)
+          };
+          const savedService = await store.update(data => {
+            if (data.services.some(entry => entry.n.toLowerCase() === service.n.toLowerCase())) {
+              throw new HttpError(409, "Ya existe un servicio con ese nombre.");
+            }
+            const entry = { id: data.nextServiceId++, ...service };
+            data.services.push(entry);
+            return entry;
+          });
+          return sendJson(res, 201, { service: savedService });
         }
         const deleteMatch = pathname.match(/^\/api\/admin\/(messages|services)\/(\d+)$/);
-        if (deleteMatch && method === "DELETE") {
-          const table = deleteMatch[1] === "messages" ? "contact_messages" : "services";
-          const result = await database.query(`DELETE FROM ${table} WHERE id = $1 RETURNING id`, [
-            deleteMatch[2]
-          ]);
-          if (!result.rowCount) return sendJson(res, 404, { error: "El registro ya no existe." });
+        if (deleteMatch && req.method === "DELETE") {
+          const result = await store.update(data => {
+            const collection = deleteMatch[1] === "messages" ? data.messages : data.services;
+            const index = collection.findIndex(entry => entry.id === Number(deleteMatch[2]));
+            if (index < 0) return false;
+            collection.splice(index, 1);
+            return true;
+          });
+          if (!result) return sendJson(res, 404, { error: "El registro ya no existe." });
           return sendJson(res, 200, { message: "Registro eliminado." });
         }
-        return sendJson(res, 404, { error: "Ruta administrativa no encontrada." });
+        if (pathname.startsWith("/api/admin/")) {
+          return sendJson(res, 404, { error: "Ruta administrativa no encontrada." });
+        }
       } catch (error) {
         if (error instanceof HttpError) return sendJson(res, error.status, { error: error.message });
-        if (error.code === "23505") {
-          return sendJson(res, 409, { error: "Ya existe un servicio con ese nombre." });
-        }
-        console.error("Error en el panel administrativo:", error.message);
-        return sendJson(res, 500, { error: "No se pudo completar la operación administrativa." });
+        console.error("No se pudo completar la operación del panel:", error.message);
+        return sendJson(res, 500, { error: "No se pudo completar la operación. Revisa el servidor e inténtalo de nuevo." });
       }
     }
 

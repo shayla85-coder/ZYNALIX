@@ -42,7 +42,7 @@
 
 <section id="servicios"><div class="w">
 <p class="kick rv">Catálogo</p><h2 class="rv">Lo que hacemos, <em>bien hecho</em></h2>
-<div class="tabs" id="tb"></div><div class="grid" id="gr"></div></div></section>
+<div class="tabs" id="tb"></div><div class="grid" id="gr"></div><p id="svc-error" class="error" hidden></p></div></section>
 
 <section id="cotizador" class="alt"><div class="w">
 <p class="kick rv">Cotizador</p><h2 class="rv">Calcula tu <em>presupuesto</em></h2>
@@ -119,8 +119,8 @@
 </div>
 </footer>
 
-<div class="ov" id="lg"><div class="box"><h3>Panel de administrador</h3><p style="color:var(--mut);font-size:.9rem">Demo: usuario <b>admin</b> · clave <b>olivo2026</b></p>
-<form id="lf" novalidate><label>Usuario<input id="lu"></label><label>Contraseña<input id="lp" type="password"></label><span class="er" id="le"></span>
+<div class="ov" id="lg"><div class="box"><h3>Panel de administrador</h3>
+<form id="lf" novalidate><label>Usuario<input id="lu" autocomplete="username"></label><label>Contraseña<input id="lp" type="password" autocomplete="current-password"></label><span class="er" id="le"></span>
 <button class="btn" type="submit">Entrar</button><button class="btn g" type="button" data-x>Cerrar</button></form></div></div>
 
 <div class="ov" id="legal" role="dialog" aria-modal="true" aria-labelledby="legal-title">
@@ -130,12 +130,12 @@
 <button class="btn g" type="button" data-x>Cerrar</button>
 </div></div>
 
-<div class="ov" id="pa"><div class="box big"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Panel privado</h3><button class="btn g" data-x>Cerrar sesión</button></div>
-<div class="tabs"><button class="tab on" data-p="m">Mensajes</button><button class="tab" data-p="s">Servicios</button></div>
-<div id="pm"></div>
+<div class="ov" id="pa"><div class="box big"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Panel privado</h3><button class="btn g" data-logout>Cerrar sesión</button></div>
+<div class="tabs"><button class="tab on" data-p="m">Mensajes</button><button class="tab" data-p="q">Cotizaciones</button><button class="tab" data-p="s">Servicios</button></div>
+<div id="pm"></div><div id="pq" style="display:none"></div>
 <div id="ps" style="display:none"><div id="pl"></div>
-<form id="sf" novalidate><label>Nombre<input id="sn"></label><label>Categoría<select id="sc"><option>Mantenimiento</option><option>Desarrollo</option></select></label>
-<label>Precio<input id="sp" placeholder="Desde $50.000"></label><label>Descripción<input id="sd"></label><button class="btn" type="submit">Añadir servicio</button></form></div></div></div>
+<form id="sf" novalidate><label>Nombre<input id="sn" required maxlength="120"></label><label>Categoría<select id="sc"><option>Mantenimiento</option><option>Desarrollo</option></select></label>
+<label>Precio<input id="sp" placeholder="Desde $50.000" maxlength="80"></label><label>Descripción<input id="sd" maxlength="500"></label><button class="btn" type="submit">Añadir servicio</button></form></div></div></div>
 
 <div id="cb"><div id="pn"><header>Zyna, asistente<small>Resuelve tus dudas sobre servicios y atención</small></header>
 <div id="ms" aria-live="polite"></div><div class="ch" id="qr"></div>

@@ -19,6 +19,16 @@ const BASE=[
 {n:"Automatización con IA",c:"Desarrollo",p:"Cotización",d:"Chatbots y flujos que atienden a tus clientes por ti."}];
 let S=BASE,cat="Todos";
 
+async function loadServices(){
+ try{
+  const result=await api("/api/services");
+  if(!Array.isArray(result.services))throw new Error("El catálogo recibido no es válido.");
+  S=result.services;drawSvc();
+ }catch(error){
+  const notice=$("#svc-error");notice.hidden=false;notice.textContent=error.message;
+ }
+}
+
 /* Terminal animada del hero */
 const L=["$ zynalix --diagnostico","<span class=d>Revisando disco…</span> <span class=ok>OK</span>","<span class=d>Temperatura CPU…</span> <span class=ok>OK</span>","<span class=d>Memoria RAM…</span> <span class=ok>OK</span>","<span class=d>Compilando tu idea…</span>","<span class=ok>✓ Todo listo. ¿Empezamos?</span>"];
 (async()=>{const t=$("#tm");let h="";for(const l of L){h+=l+"\n";t.innerHTML=h+"▍";await new Promise(r=>setTimeout(r,650))}})();
@@ -29,15 +39,6 @@ function drawSvc(){
  $("#tb").innerHTML=cats.map(c=>`<button class="tab ${c==cat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
  $("#gr").innerHTML=S.filter(x=>cat=="Todos"||x.c==cat).map((x,i)=>`<article class="card" style="animation-delay:${i*60}ms"><span class="n">0${i+1}</span><span class="t">${esc(x.c)}</span><h3>${esc(x.n)}</h3><p>${esc(x.d)}</p><div class="f"><span>${esc(x.p)}</span><button data-q="${esc(x.n)}">Cotizar →</button></div></article>`).join("");
  $("#fs").innerHTML=S.map(x=>`<option>${esc(x.n)}</option>`).join("");drawQ();
-}
-async function loadServices(){
- try{
-  const result=await api("/api/services");
-  if(!Array.isArray(result.services))throw new Error("El catálogo recibido no es válido.");
-  S=result.services;drawSvc();
- }catch(error){
-  const notice=$("#svc-error");notice.style.display="block";notice.textContent=error.message;
- }
 }
 $("#tb").onclick=e=>{if(e.target.dataset.c){cat=e.target.dataset.c;drawSvc()}};
 $("#gr").onclick=e=>{
@@ -63,36 +64,36 @@ $$(".rv").forEach(x=>io.observe(x));
 $("#burger").onclick=()=>$("#lk").classList.toggle("on");$("#lk").onclick=()=>$("#lk").classList.remove("on");
 $("#th").onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=d?"light":"dark"};
 
-/* Formulario con validación y estado de carga */
+/* Formulario de contacto */
 $("#cf2").onsubmit=async e=>{e.preventDefault();
  const f=[["#fn",v=>v.trim().length>=3,"Escribe tu nombre completo."],["#fe",v=>/^\S+@\S+\.\S+$/.test(v),"Ingresa un correo válido."],["#fm",v=>v.trim().length>=10,"Cuéntanos un poco más (mínimo 10 letras)."]];let ok=true;
  f.forEach(([s,fn,m])=>{const i=$(s),er=i.nextElementSibling,g=fn(i.value);i.classList.toggle("bad",!g);er.textContent=g?"":m;if(!g)ok=false});
- if(!ok)return;const b=e.target.querySelector(".btn"),o=$("#ok");b.classList.add("ld");b.disabled=true;$("#bt").textContent="Enviando…";o.style.display="none";
+ if(!ok)return;
+ const button=e.target.querySelector('button[type="submit"]'),o=$("#ok");
+ button.disabled=true;o.classList.remove("error");o.style.display="none";
  try{
   await api("/api/contact",{method:"POST",body:JSON.stringify({name:$("#fn").value.trim(),email:$("#fe").value.trim(),service:$("#fs").value,message:$("#fm").value.trim()})});
-  e.target.reset();o.textContent="¡Gracias! Guardamos tu solicitud y te escribiremos pronto.";o.classList.remove("error");
-  f.forEach(([s])=>$(s).classList.remove("bad"));
+  e.target.reset();o.textContent="¡Gracias! Guardamos tu solicitud y el equipo se pondrá en contacto contigo.";f.forEach(([s])=>$(s).classList.remove("bad"));
  }catch(error){o.textContent=error.message;o.classList.add("error")}
- finally{b.classList.remove("ld");b.disabled=false;$("#bt").textContent="Enviar mensaje";o.style.display="block"}
+ finally{button.disabled=false;o.style.display="block"}
 };
 
-/* Admin: login y panel */
 const open=(i,v)=>$(i).classList.toggle("on",v);
 $("#ad").onclick=()=>open("#lg",true);
 $$("[data-x]").forEach(b=>b.onclick=()=>b.closest(".ov").classList.remove("on"));
 $$(".ov").forEach(o=>o.onclick=e=>{if(e.target==o)o.classList.remove("on")});
 const legalNotices={
  privacy:{title:"Aviso de privacidad",paragraphs:[
-  "Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en una base de datos PostgreSQL del servidor para que ZYNALIX pueda atender la solicitud. El catálogo de servicios también se almacena allí. El personal administrador autorizado puede consultar esos registros. No compartas contraseñas, datos bancarios ni información sensible.",
-  "El chat responde con opciones predefinidas sobre los servicios y no guarda la conversación.",
+  "Cuando envías el formulario de contacto o una cotización, el nombre, correo, servicio y mensaje o selección se guardan en un archivo local del servidor para que ZYNALIX pueda atender la solicitud. El personal administrador autorizado puede consultar esos registros. No compartas contraseñas, datos bancarios ni información sensible.",
+  "Si el chat con Gemini está configurado, las preguntas se envían a Google para generar respuestas; este sitio no guarda el historial de la conversación.",
   "Las fuentes tipográficas se cargan desde Google Fonts y el enlace de ubicación abre Google Maps. Esos servicios externos pueden recibir datos técnicos de tu conexión cuando los visitas.",
   "Este aviso describe el comportamiento técnico actual y no reemplaza una política legal revisada para el negocio. Antes de publicar el sitio, agrega los datos de contacto del responsable del tratamiento y valida la política aplicable."
  ]},
  terms:{title:"Términos y condiciones",paragraphs:[
   "Los servicios y precios mostrados son informativos. El cotizador presenta una estimación; el alcance, el precio final y el plazo deben confirmarse antes de iniciar cualquier trabajo.",
-  "Las solicitudes de contacto y cotizaciones enviadas se guardan en PostgreSQL para que ZYNALIX pueda gestionarlas. El chat ofrece respuestas predefinidas y no envía tus preguntas a servicios de IA.",
+   "Las solicitudes de contacto y cotizaciones se guardan en el servidor para que ZYNALIX pueda gestionarlas.",
   "El uso de enlaces externos, como Google Maps y Google Fonts, está sujeto a las condiciones de sus respectivos proveedores.",
-  "Esta página aún no sustituye los términos legales definitivos del negocio. Antes de recibir solicitudes reales, se debe conectar un canal de atención y publicar la información legal correspondiente."
+   "Esta página aún no sustituye los términos legales definitivos del negocio."
  ]}
 };
 $$("[data-legal]").forEach(b=>b.onclick=()=>{
@@ -119,7 +120,7 @@ async function drawAd(){
  $("#pm").innerHTML="<p>Cargando solicitudes…</p>";$("#pq").innerHTML="<p>Cargando cotizaciones…</p>";$("#pl").innerHTML="";
  try{
   const [messageData,quoteData,serviceData]=await Promise.all([
-   api("/api/admin/messages"),api("/api/admin/quotes"),api("/api/services")
+   api("/api/admin/messages"),api("/api/admin/quotes"),api("/api/admin/services")
   ]);
   $("#pm").innerHTML=messageData.messages.length?messageData.messages.map(m=>`<div class="row"><div><b>${esc(m.name)}</b> · ${esc(m.email)}<small>${esc(m.service)} — ${new Date(m.created_at).toLocaleString("es-CO")}</small>${esc(m.message)}</div><button data-dm="${esc(m.id)}">Borrar</button></div>`).join(""):"<p>Aún no hay mensajes.</p>";
   $("#pq").innerHTML=quoteData.quotes.length?quoteData.quotes.map(q=>`<div class="row"><div><b>${esc(q.name)}</b> · ${esc(q.email)}<small>${new Date(q.created_at).toLocaleString("es-CO")} · ${q.modality==="onsite"?"En sitio":"Remoto"} · ${q.priority==="urgent"?"Urgente":"Normal"}</small>${q.items.map(i=>`${esc(i.name)} ×${esc(i.quantity)}`).join(", ")} — ${cop(Number(q.estimated_total))}${q.pending_items?` + ${esc(q.pending_items)} por cotizar`:""}</div></div>`).join(""):"<p>Aún no hay cotizaciones.</p>";
@@ -148,9 +149,9 @@ $("#sf").onsubmit=async e=>{e.preventDefault();if(!$("#sn").value.trim())return;
 /* Cotizador: suma servicios x cantidad, aplica modalidad y prioridad */
 function num(s){const m=String(s).replace(/\./g,"").match(/\d+/);return m?+m[0]:0}
 function cop(n){return "$"+Math.round(n).toLocaleString("es-CO")}
-function drawQ(){$("#ql").innerHTML=S.map((s,i)=>`<label class="qi"><input type="checkbox" data-i="${i}" data-svc-id="${esc(s.id||"")}"><span><b>${esc(s.n)}</b><small>${esc(s.p)}</small></span><input class="qq" type="number" min="1" max="20" value="1" data-i="${i}" aria-label="Cantidad"></label>`).join("");calcQ()}
+function drawQ(){$("#ql").innerHTML=S.map((s,i)=>`<label class="qi"><input type="checkbox" data-i="${i}"><span><b>${esc(s.n)}</b><small>${esc(s.p)}</small></span><input class="qq" type="number" min="1" max="20" value="1" data-i="${i}" aria-label="Cantidad"></label>`).join("");calcQ()}
 function calcQ(){let b=0,pend=0,det=[],items=[];
- $$("#ql input[type=checkbox]:checked").forEach(c=>{const i=c.dataset.i,q=Math.min(20,Math.max(1,+$(`.qq[data-i="${i}"]`).value||1)),v=num(S[i].p);b+=v*q;if(!v)pend++;det.push(S[i].n+" ×"+q+(v?" · "+cop(v*q):" · por cotizar"));items.push({serviceId:Number(c.dataset.svcId),quantity:q})});
+ $$("#ql input[type=checkbox]:checked").forEach(c=>{const i=c.dataset.i,q=Math.min(20,Math.max(1,+$(`.qq[data-i="${i}"]`).value||1)),v=num(S[i].p);b+=v*q;if(!v)pend++;det.push(S[i].n+" ×"+q+(v?" · "+cop(v*q):" · por cotizar"));items.push({serviceId:S[i].id,name:S[i].n,quantity:q,unitPrice:v,subtotal:v*q})});
  const t=det.length?b*(($("#qu").value==="urgent")?1.2:1)+($("#qm").value==="onsite"?30000:0):0;
  $("#qd").innerHTML=det.length?det.map(x=>esc(x)).join("<br>"):"Selecciona uno o más servicios.";
  $("#qt").innerHTML=cop(t)+(pend?`<small style="font:500 .8rem Schibsted Grotesk;color:var(--mut)"> + ${pend} por cotizar</small>`:"");
@@ -161,13 +162,14 @@ $("#qb").onclick=async()=>{const r=calcQ(),n=$("#qn").value.trim(),e=$("#qe").va
  if(!r.det.length){er.textContent="Elige al menos un servicio.";return}
  if(n.length<3){er.textContent="Escribe tu nombre.";return}
  if(!/^\S+@\S+\.\S+$/.test(e)){er.textContent="Ingresa un correo válido.";return}
- if(r.items.some(item=>!item.serviceId)){er.textContent="El catálogo aún no está disponible. Inténtalo de nuevo en unos segundos.";return}
- er.textContent="";const b=$("#qb");b.classList.add("ld");b.disabled=true;$("#qbt").textContent="Enviando…";
+ er.textContent="";
+ if(r.items.some(item=>!item.serviceId)){er.textContent="No se pudo cargar el catálogo. Recarga la página e inténtalo de nuevo.";return}
+ const button=$("#qb"),o=$("#qk");button.disabled=true;o.classList.remove("error");o.style.display="none";
  try{
-  const result=await api("/api/quotes",{method:"POST",body:JSON.stringify({name:n,email:e,items:r.items,modality:$("#qm").value,priority:$("#qu").value})});
-  const o=$("#qk");o.classList.remove("error");o.style.display="block";o.textContent=`¡Listo! Guardamos tu solicitud de cotización. Estimado: ${cop(Number(result.estimatedTotal))}${result.pendingItems?` + ${result.pendingItems} por cotizar`:""}. Te contactaremos en menos de 24 horas.`;
- }catch(error){const o=$("#qk");o.classList.add("error");o.style.display="block";o.textContent=error.message}
- finally{b.classList.remove("ld");b.disabled=false;$("#qbt").textContent="Solicitar cotización"}
+  const result=await api("/api/quotes",{method:"POST",body:JSON.stringify({name:n,email:e,items:r.items.map(item=>({serviceId:item.serviceId,quantity:item.quantity})),modality:$("#qm").value==="onsite"?"onsite":"remote",priority:$("#qu").value==="urgent"?"urgent":"normal"})});
+  o.textContent=`¡Listo! Guardamos tu solicitud de cotización. Estimado: ${cop(Number(result.estimatedTotal))}${result.pendingItems?` + ${result.pendingItems} por cotizar`:""}. Te contactaremos en menos de 24 horas.`;
+ }catch(error){o.textContent=error.message;o.classList.add("error")}
+ finally{button.disabled=false;o.style.display="block"}
 };
 
 /* Galería con visor ampliado (flechas del teclado y Escape) */
@@ -195,12 +197,12 @@ const KB=[[/hola|buenas|hey/,"¡Hola! Soy Zyna, de ZYNALIX. Cuéntame qué le pa
  [/wifi|red|internet|router/,"Configuramos redes y WiFi para casa u oficina, con buena cobertura y seguridad."],
  [/web|pagina|sitio|tienda|app|aplicacion|software|program|bot|ia\b/,"Desarrollamos páginas web, tiendas en línea, aplicaciones a la medida y automatizaciones con IA. Cuéntame de tu idea y te orientamos."],
  [/horario|cuando|donde|ubic|cartagena|remoto/,"Atendemos en Cartagena y de forma remota. Respondemos en menos de 24 horas."],
- [/contact|agendar|cita|whatsapp|correo/,"Déjanos tus datos en el formulario de contacto y te escribimos pronto."],
+ [/contact|agendar|cita|whatsapp|correo/,"Usa el formulario de contacto para preparar un mensaje que podrás enviar por WhatsApp."],
  [/gracias|chao|adios/,"¡Con gusto! Aquí estaremos cuando tu tecnología nos necesite."]];
 function ask(q){
  say(q,"me");const t=say("","bot");t.innerHTML="<span class=dots><span></span><span></span><span></span></span>";
  const n=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");const k=KB.find(x=>x[0].test(n));
- setTimeout(()=>{const r=k?(typeof k[1]=="function"?k[1]() :k[1]):"Buena pregunta. Para darte una respuesta exacta, déjanos tus datos en el formulario de contacto y un técnico te escribe.";t.textContent=r;ms.scrollTop=ms.scrollHeight},800);
+ setTimeout(()=>{const r=k?(typeof k[1]=="function"?k[1]() :k[1]):"Buena pregunta. Usa el formulario de contacto para preparar un mensaje para WhatsApp.";t.textContent=r;ms.scrollTop=ms.scrollHeight},800);
 }
 $("#cbt").onclick=()=>{$("#pn").classList.toggle("on");if(!ms.children.length){say("¡Hola! Soy Zyna. Puedo contarte sobre servicios, precios y tiempos.","bot");$("#qr").innerHTML=["¿Cuánto cuesta?","Mi PC está lento","Quiero una página web"].map(x=>`<button>${x}</button>`).join("")}};
 $("#qr").onclick=e=>{if(e.target.tagName=="BUTTON")ask(e.target.textContent)};
