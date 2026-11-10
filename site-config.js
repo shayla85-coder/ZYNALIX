@@ -1,1 +1,1 @@
-window.ZYNALIX_STATIC = false;
+window.ZYNALIX_STATIC = true;
